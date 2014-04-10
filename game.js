@@ -42,7 +42,7 @@ $(document).ready(function() {
         Crafty.e("2D, DOM, Text")
             .attr({w: 600, h: 20, x: 0, y: 120})
             .text("Loading")
-            .css({"text-align": "center"});
+            .css({"text-align": "center", "font-size": "30px"});
     }); //scene loading
 
 
@@ -104,9 +104,11 @@ $(document).ready(function() {
         },
         onStartDrag: function(evt) {
             this._report_evt(evt);
+            this.attr({z: 2000});
         },
         onStopDrag: function(evt) {
             this._report_evt(evt);
+            this.attr({z: 1000});
             var xs = this.hit("Region");
             if (xs) {
                 var e = _.max(xs, function(obj) {
@@ -162,7 +164,10 @@ $(document).ready(function() {
                     }
                     console.log('entity for', 9 - index, r, pn);
                     var piece = Crafty.e("2D, DOM, Mouse, Draggable, Collision, " + pn + ", Piece");
-                    piece.attr({x:index2coor_x(9 - index), y:index2coor_y(r)});
+                    piece.attr({x:index2coor_x(9 - index), 
+                                y:index2coor_y(r),
+                                z: 1000,
+                                });
                     pieces.push(piece);
 
                 }
@@ -215,8 +220,10 @@ $(document).ready(function() {
                         x: index2coor_x(x),
                         y: index2coor_y(y),
                         w: 60,
-                        h: 64,});
+                        h: 64,
+                        z: 50});
                 entity.attr({idx_x:x, idx_y:y});
+                console.log(entity, entity.z);
                 g_squares[(x, y)] = entity;
             });
         });
