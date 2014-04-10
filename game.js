@@ -96,6 +96,31 @@ $(document).ready(function() {
         },
     }); //Crafty.c Region
 
+    Crafty.c("MessageRelay", {
+        init: function () {
+            this.requires("obj")
+            .bind("Arrival", this.onArrival)
+            .bind("Departure", this.onDepature);
+            this.listeners = [];
+        },
+        subscribe: function(listener) {
+            this.listeners.push(listener);
+        },
+        onDepature: function(evt) {
+            _.each(this.listeners, function(listener) {
+                listener.trigger("Departure", evt);
+            });
+        },
+        onArrival: function(evt) {
+            _.each(this.listeners, function(listener) {
+                listener.trigger("Arrival", evt);
+            });
+        },
+    }); //Crafty.c MessageRelay 
+
+    var g_message_relay = Crafty.e("MessageRelay");
+
+
     Crafty.c("Piece", {
         init: function () {
             this.requires("2D, DOM, Mouse, Draggable, Sprite, Collision")
@@ -105,6 +130,17 @@ $(document).ready(function() {
         onStartDrag: function(evt) {
             this._report_evt(evt);
             this.attr({z: 2000});
+            this.old_x = this.x;
+            this.old_y = this.y;
+            var xs = this.hit("Region");
+            if (xs) {
+                var e = _.max(xs, function(obj) {
+                    return Math.abs(obj.overlap);
+                }).obj;
+            } else {
+                // Never.
+            }
+            g_message_relay.trigger("Departure", {x: e.idx_x, y:e.idx_y, piece: this});
         },
         onStopDrag: function(evt) {
             this._report_evt(evt);
@@ -114,9 +150,14 @@ $(document).ready(function() {
                 var e = _.max(xs, function(obj) {
                     return Math.abs(obj.overlap);
                 }).obj;
+                //snap to grid
                 this.x = e.x;
                 this.y = e.y;
-                console.log(e, e.idx_x, e.idx_y);
+                g_message_relay.trigger("Arrival", {x: e.idx_x, y: e.idx_y, piece: this});
+            } else {
+                console.log("bad destination! panic!");
+                this.x = this.old_x;
+                this.y = this.old_y;
             }
         },
         _report_evt: function(evt) {
@@ -126,6 +167,22 @@ $(document).ready(function() {
             console.log("x,y", this.x, this.y);
         },
     }); //Crafty.c Piece
+
+    Crafty.c("Recorder", {
+        init: function () {
+            this.requires("2D, DOM, Text")
+            .bind("Arrival", this.onArrival)
+            .bind("Departure", this.onDepature);
+            g_message_relay.subscribe(this);
+        },
+        onArrival: function(evt) {
+            console.log(evt);
+        },
+        onDepature: function(evt) {
+            console.log(evt);
+        }
+    });
+
 
     function initial_setup() {
         csa_setup(
@@ -228,6 +285,7 @@ $(document).ready(function() {
             });
         });
         initial_setup();
+        var recorder = Crafty.e("2D, DOM, Text, Recorder");
         /*
         var x = 1;
         var y = 1;
