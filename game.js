@@ -3,7 +3,7 @@ $(document).ready(function() {
     "fu","KY","um","KA","NK","ke","KE","to","ky","RY","NG","UM","ny","hi","GI","OU","NY"];
 
 
-    Crafty.init(100 + 600 + 100 + 200, 640);
+    Crafty.init(200 + 600 + 200, 1000);
     Crafty.canvas.init();
 
     Crafty.scene("loading", function() {
@@ -31,7 +31,7 @@ $(document).ready(function() {
         // White background and some ugle text
         Crafty.background("#FFF");
         Crafty.e("2D, DOM, Text")
-            .attr({w: 600, h: 20, x: 0, y: 120})
+            .attr({w: 1000, h: 20, x: 0, y: 120})
             .text("Loading")
             .css({"text-align": "center", "font-size": "30px"});
     }); //scene loading
@@ -224,6 +224,9 @@ $(document).ready(function() {
             .bind("Departure", this.onDepature);
             g_message_relay.subscribe(this);
             this.moveList = [];
+            var did = this.getDomId();
+            $("#"+did).append("<textarea id='csa'></textarea>");
+            this.record = $("#csa")
         },
         lastEvt: null,
         moveList: null,
@@ -240,7 +243,7 @@ $(document).ready(function() {
             this.moveList.push(move_text);
             var did = this.getDomId();
             console.log(move_text, did);
-            $("#"+did).append("<p>" + move_text + "</p>");
+            this.record.append( move_text + "\n");
         },
         onDepature: function(evt) {
             //console.log(evt);
@@ -274,7 +277,6 @@ $(document).ready(function() {
                             h: board.cell_h,
                             z: 50});
                     entity.attr({idx_x:i, idx_y:j});
-                    //console.log(entity, entity.z);
                     board.squares[(i, j)] = entity;
                 });
             });
@@ -410,7 +412,8 @@ $(document).ready(function() {
 
     Crafty.scene("main", function() {
         Crafty.background("#FFFFFF url(assets/tatami.jpg) repeat");
-        Crafty.sprite("assets/board.jpg", {SpriteBoard: [0,0,600, 640]});
+        Crafty.sprite("assets/board.jpg", {SpriteBoard: [0, 0, 600, 640]});
+        Crafty.sprite("assets/mokume.png", {SpriteKomadai: [0, 0, 160, 280]});
         Crafty.sprite("assets/koma.png", {KI:[0,0,60,64],
             TO:[60,0,60,64],
             FU:[120,0,60,64],
@@ -442,11 +445,15 @@ $(document).ready(function() {
         });
 
         var board = Crafty.e("2D, Dom, Board, SpriteBoard");
+        var komadaiW = Crafty.e("2D, Dom, SpriteKomadai, Region, Collision");
+        var komadaiB = Crafty.e("2D, Dom, SpriteKomadai, Region, Collision");
         var recorder = Crafty.e("2D, DOM, Text, Recorder");
-        board.attr({x: 100, y: 0, off_x:30, off_y:32, z:50, cell_w: 60, cell_h: 64});
+        board.attr({x: 200, y: 0, off_x:30, off_y:32, z:50, cell_w: 60, cell_h: 64});
+        komadaiW.attr({x:20, y:20, z:51, name:"white"})
+        komadaiB.attr({x:820, y:340, z:51, name:"black"})
         board.layout();
         board.initial_setup();
-        recorder.attr({x:800, y:0, w:200, h:640});
+        recorder.attr({x:0, y:700, w:800, h:200, background_color: "white"});
         recorder.text("test! test! test!");
         /*
         var x = 1;
