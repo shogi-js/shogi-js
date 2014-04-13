@@ -2,6 +2,36 @@ $(document).ready(function() {
     var PIECE_NAMES = ["TO","FU","ou","ka","ry","ki","HI","ng","nk","gi",
     "fu","KY","um","KA","NK","ke","KE","to","ky","RY","NG","UM","ny","hi","GI","OU","NY"];
 
+    var koma_sprite_mapping = {KI:[0,0,60,64],
+            TO:[60,0,60,64],
+            FU:[120,0,60,64],
+            ou:[180,0,60,64],
+            ka:[240,0,60,64],
+            ry:[300,0,60,64],
+            ki:[360,0,60,64],
+            HI:[420,0,60,64],
+            ng:[480,0,60,64],
+            nk:[540,0,60,64],
+            gi:[600,0,60,64],
+            fu:[660,0,60,64],
+            KY:[720,0,60,64],
+            um:[780,0,60,64],
+            KA:[840,0,60,64],
+            NK:[900,0,60,64],
+            ke:[960,0,60,64],
+            KE:[1020,0,60,64],
+            to:[1080,0,60,64],
+            ky:[1140,0,60,64],
+            RY:[1200,0,60,64],
+            NG:[1260,0,60,64],
+            UM:[1320,0,60,64],
+            ny:[1380,0,60,64],
+            hi:[1440,0,60,64],
+            GI:[1500,0,60,64],
+            OU:[1560,0,60,64],
+            NY:[1620,0,60,64],
+    };
+
 
     Crafty.init(200 + 600 + 200, 1000);
     Crafty.canvas.init();
@@ -194,6 +224,9 @@ $(document).ready(function() {
             var mapping = {FU:"TO", KY:"NY", KE:"NK", GI:"NG", KA:"UM", HI:"RY"}
             if (this.piece_name in mapping){
                 this.piece_name = mapping[this.piece_name];
+                if (this.piece_color == '-'){
+                    this.piece_sprite_name = this.piece_name.toLowerCase();
+                }
                 console.log("promote:", this);
             }
         },
@@ -218,8 +251,10 @@ $(document).ready(function() {
             }
             g_message_relay.trigger("Departure", {region:reg, piece: this});
         },
-        prepareSprite() {
-            this.sprite = Crafty.e(this.piece_sprite_name);
+        updateSprite: function() {
+            var xs = koma_sprite_mapping[this.piece_sprite_name];
+            this.sprite(xs[0], xs[1], xs[2], xs[3]);
+            return;
         },
         onStopDrag: function(evt) {
             this._report_evt(evt);
@@ -231,6 +266,7 @@ $(document).ready(function() {
                 }).obj;
                 if (reg.idx_y > 0 && reg.idx_y < 4){ //just for test
                     this.promote();
+                    this.updateSprite();
                 }
                 //snap to grid
                 reg.snap(this);
@@ -423,7 +459,7 @@ $(document).ready(function() {
                             pn = elem.substring(1,3);
                         }
                         console.log('entity for', 9 - index, r, pn);
-                        var piece = Crafty.e("2D, DOM, Mouse, Draggable, Collision, Piece");
+                        var piece = Crafty.e("2D, DOM, Mouse, Draggable, Collision, SpritePiece, Piece");
                         piece.attr({x:board.i2x(9 - index), 
                                     y:board.j2y(r),
                                     z: 1000,
@@ -431,7 +467,9 @@ $(document).ready(function() {
                                     piece_sprite_name: pn,
                                     piece_color: elem[0],
                                     });
-                        pieces.prepareSprite();
+                        console.log(piece, piece.piece_sprite_name);
+                        console.log(koma_sprite_mapping[piece.piece_sprite_name]);
+                        piece.updateSprite();
                         pieces.push(piece);
 
                     }
@@ -447,35 +485,7 @@ $(document).ready(function() {
         Crafty.background("#FFFFFF url(assets/tatami.jpg) repeat");
         Crafty.sprite("assets/board.jpg", {SpriteBoard: [0, 0, 600, 640]});
         Crafty.sprite("assets/mokume.png", {SpriteKomadai: [0, 0, 160, 380]});
-        Crafty.sprite("assets/koma.png", {KI:[0,0,60,64],
-            TO:[60,0,60,64],
-            FU:[120,0,60,64],
-            ou:[180,0,60,64],
-            ka:[240,0,60,64],
-            ry:[300,0,60,64],
-            ki:[360,0,60,64],
-            HI:[420,0,60,64],
-            ng:[480,0,60,64],
-            nk:[540,0,60,64],
-            gi:[600,0,60,64],
-            fu:[660,0,60,64],
-            KY:[720,0,60,64],
-            um:[780,0,60,64],
-            KA:[840,0,60,64],
-            NK:[900,0,60,64],
-            ke:[960,0,60,64],
-            KE:[1020,0,60,64],
-            to:[1080,0,60,64],
-            ky:[1140,0,60,64],
-            RY:[1200,0,60,64],
-            NG:[1260,0,60,64],
-            UM:[1320,0,60,64],
-            ny:[1380,0,60,64],
-            hi:[1440,0,60,64],
-            GI:[1500,0,60,64],
-            OU:[1560,0,60,64],
-            NY:[1620,0,60,64],
-        });
+        Crafty.sprite("assets/koma.png", {SpritePiece:[0,0,60,64]});
 
         var board = Crafty.e("2D, Dom, Board, SpriteBoard");
         var komadaiW = Crafty.e("2D, Dom, SpriteKomadai, Region, Collision");
