@@ -85,6 +85,20 @@ $(document).ready(function() {
                 configurable: true
             });
         },
+        locString: function() {
+            return ""+this.idx_x+this.idx_y
+        },
+        snap: function(piece) {
+            if (this.idx_x != 0 ){
+                piece.x = this.x;
+                piece.y = this.y;
+                return;
+            }else{
+                piece.piece_color = this.name;
+                piece.unpromote();
+
+            }
+        }
     }); //Crafty.c Region
 
     Crafty.c("MessageRelay", {
@@ -176,6 +190,19 @@ $(document).ready(function() {
                 configurable: true
             });
         },
+        promote: function(){
+            var mapping = {FU:"TO", KY:"NY", KE:"NK", GI:"NG", KA:"UM", HI:"RY"}
+            if (this.piece_name in mapping){
+                this.piece_name = mapping[this.piece_name];
+                console.log("promote:", this);
+            }
+        },
+        unpromote: function(){
+            var mapping = {TO:"FU", NY:"KY", NK:"KE", NG:"GI", UM:"KA", RY:"HI"}
+            if (this.piece_name in mapping){
+                this.piece_name = mapping[this.piece_name];
+            }
+        },
         onStartDrag: function(evt) {
             this._report_evt(evt);
             this.attr({z: 2000});
@@ -183,26 +210,31 @@ $(document).ready(function() {
             this.old_y = this.y;
             var xs = this.hit("Region");
             if (xs) {
-                var e = _.max(xs, function(obj) {
+                var reg = _.max(xs, function(obj) {
                     return Math.abs(obj.overlap);
                 }).obj;
             } else {
                 // Never.
             }
-            g_message_relay.trigger("Departure", {x: e.idx_x, y:e.idx_y, piece: this});
+            g_message_relay.trigger("Departure", {region:reg, piece: this});
+        },
+        prepareSprite() {
+            this.sprite = Crafty.e(this.piece_sprite_name);
         },
         onStopDrag: function(evt) {
             this._report_evt(evt);
             this.attr({z: 1000});
             var xs = this.hit("Region");
             if (xs) {
-                var e = _.max(xs, function(obj) {
+                var reg = _.max(xs, function(obj) {
                     return Math.abs(obj.overlap);
                 }).obj;
+                if (reg.idx_y > 0 && reg.idx_y < 4){ //just for test
+                    this.promote();
+                }
                 //snap to grid
-                this.x = e.x;
-                this.y = e.y;
-                g_message_relay.trigger("Arrival", {x: e.idx_x, y: e.idx_y, piece: this});
+                reg.snap(this);
+                g_message_relay.trigger("Arrival", {region:reg, piece: this});
             } else {
                 console.log("bad destination! panic!");
                 this.x = this.old_x;
@@ -232,8 +264,8 @@ $(document).ready(function() {
         moveList: null,
         format_as_csa: function(evt) {
             return ""+evt.piece.piece_color
-                     +this.lastEvt.x+this.lastEvt.y
-                     +evt.x+evt.y
+                     +this.lastEvt.region.locString()
+                     +evt.region.locString()
                      +evt.piece.piece_name;
         },
         onArrival: function(evt) {
@@ -391,7 +423,7 @@ $(document).ready(function() {
                             pn = elem.substring(1,3);
                         }
                         console.log('entity for', 9 - index, r, pn);
-                        var piece = Crafty.e("2D, DOM, Mouse, Draggable, Collision, " + pn + ", Piece");
+                        var piece = Crafty.e("2D, DOM, Mouse, Draggable, Collision, Piece");
                         piece.attr({x:board.i2x(9 - index), 
                                     y:board.j2y(r),
                                     z: 1000,
@@ -399,6 +431,7 @@ $(document).ready(function() {
                                     piece_sprite_name: pn,
                                     piece_color: elem[0],
                                     });
+                        pieces.prepareSprite();
                         pieces.push(piece);
 
                     }
@@ -413,7 +446,7 @@ $(document).ready(function() {
     Crafty.scene("main", function() {
         Crafty.background("#FFFFFF url(assets/tatami.jpg) repeat");
         Crafty.sprite("assets/board.jpg", {SpriteBoard: [0, 0, 600, 640]});
-        Crafty.sprite("assets/mokume.png", {SpriteKomadai: [0, 0, 160, 280]});
+        Crafty.sprite("assets/mokume.png", {SpriteKomadai: [0, 0, 160, 380]});
         Crafty.sprite("assets/koma.png", {KI:[0,0,60,64],
             TO:[60,0,60,64],
             FU:[120,0,60,64],
@@ -449,8 +482,8 @@ $(document).ready(function() {
         var komadaiB = Crafty.e("2D, Dom, SpriteKomadai, Region, Collision");
         var recorder = Crafty.e("2D, DOM, Text, Recorder");
         board.attr({x: 200, y: 0, off_x:30, off_y:32, z:50, cell_w: 60, cell_h: 64});
-        komadaiW.attr({x:20, y:20, z:51, name:"white"})
-        komadaiB.attr({x:820, y:340, z:51, name:"black"})
+        komadaiW.attr({x:20, y:20, z:51, name:"+"})
+        komadaiB.attr({x:820, y:240, z:51, name:"-"})
         board.layout();
         board.initial_setup();
         recorder.attr({x:0, y:700, w:800, h:200, background_color: "white"});
