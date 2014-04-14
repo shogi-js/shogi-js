@@ -69,9 +69,77 @@ $(document).ready(function() {
 
     Crafty.scene("loading");
 
+    Crafty.c("Stack", {
+        init: function () {
+            this.requires("Region");
+            if (Crafty.support.setter) {
+                this._defineGetterSetter_setter();
+            } else if (Crafty.support.defineProperty) {
+                //IE9 supports Object.defineProperty
+                this._defineGetterSetter_defineProperty();
+            }
+            this.piece_stack = {FU:[], KY:[], KE:[], GI:[], KI:[], KA:[], HI:[], OU:[]};
+        },
+        _defineGetterSetter_setter: function () {
+            this.__defineSetter__('piece_stack', function (v) {
+                this._attr('_piece_stack', v);
+            });
+            this.__defineGetter__('piece_stack', function () {
+                return this._piece_stack;
+            });
+        },
+        _defineGetterSetter_defineProperty: function () {
+            Object.defineProperty(this, 'piece_stack', {
+                set: function (v) {
+                    this._attr('_piece_stack', v);
+                },
+                get: function () {
+                    return this._piece_stack;
+                },
+                configurable: true
+            });
+        },
+        insert: function(piece) {
+            this.piece_stack[piece.piece_name].push(piece);
+        },
+        pop: function(piece) {
+            this.piece_stack[piece.piece_name].splice(0, 1);
+        },
+        notifyNewPosition: function() {
+            var stackable = this;
+            var jy = 0;
+            _.each(stackable.piece_stack, function(arr) {
+                _.each(arr, function(piece, ix, xs) {
+                    piece.x = stackable.x + ix* 20; //let be in resource.
+                    piece.y = stackable.y + jy* 40; //let be in resource.
+                    piece.trigger("Invalidate"); // maybe don't need this.
+                });
+                jy += 1;
+            });
+        },
+        align: function(piece) {
+            piece.piece_color = this.name;
+            piece.unpromote();
+            piece.set_side
+            this.insert(piece);
+            this.notifyNewPosition();
+            console.log("Stack.align(piece)", this, piece);
+        },
+    });
+    Crafty.c("Mutex", {
+        init: function () {
+            this.requires("Region");
+        },
+        align: function(piece) {
+            console.log("Mutex.align(piece)", this, piece);
+            piece.x = this.x;
+            piece.y = this.y;
+        },
+    });
+
     Crafty.c("Region", {
         init: function () {
-            this.requires("2D, DOM, Collision")
+            this.requires("2D, DOM, Collision");
             if (Crafty.support.setter) {
                 this._defineGetterSetter_setter();
             } else if (Crafty.support.defineProperty) {
@@ -118,17 +186,6 @@ $(document).ready(function() {
         locString: function() {
             return ""+this.idx_x+this.idx_y
         },
-        snap: function(piece) {
-            if (this.idx_x != 0 ){
-                piece.x = this.x;
-                piece.y = this.y;
-                return;
-            }else{
-                piece.piece_color = this.name;
-                piece.unpromote();
-
-            }
-        }
     }); //Crafty.c Region
 
     Crafty.c("MessageRelay", {
@@ -224,7 +281,7 @@ $(document).ready(function() {
             var mapping = {FU:"TO", KY:"NY", KE:"NK", GI:"NG", KA:"UM", HI:"RY"}
             if (this.piece_name in mapping){
                 this.piece_name = mapping[this.piece_name];
-                if (this.piece_color == '-'){
+                if (this.piece_color == '+'){
                     this.piece_sprite_name = this.piece_name.toLowerCase();
                 }
                 console.log("promote:", this);
@@ -268,8 +325,9 @@ $(document).ready(function() {
                     this.promote();
                     this.updateSprite();
                 }
-                //snap to grid
-                reg.snap(this);
+                //snap to grid, promote, moving taken piece to komadai, unpromote, etc
+                reg.align(this);
+
                 g_message_relay.trigger("Arrival", {region:reg, piece: this});
             } else {
                 console.log("bad destination! panic!");
@@ -335,7 +393,7 @@ $(document).ready(function() {
             var board = this;
             _.each(_.range(1, 10, 1), function (i) {
                 _.each(_.range(1, 10, 1), function (j) {
-                    var entity = Crafty.e("2D, DOM, Text, Region, Collision")
+                    var entity = Crafty.e("2D, DOM, Text, Region, Collision, Mutex")
                         .text("" + i + ","+ j)
                         .attr({
                             visible:false,
@@ -488,8 +546,8 @@ $(document).ready(function() {
         Crafty.sprite("assets/koma.png", {SpritePiece:[0,0,60,64]});
 
         var board = Crafty.e("2D, Dom, Board, SpriteBoard");
-        var komadaiW = Crafty.e("2D, Dom, SpriteKomadai, Region, Collision");
-        var komadaiB = Crafty.e("2D, Dom, SpriteKomadai, Region, Collision");
+        var komadaiW = Crafty.e("2D, Dom, SpriteKomadai, Region, Collision, Stack");
+        var komadaiB = Crafty.e("2D, Dom, SpriteKomadai, Region, Collision, Stack");
         var recorder = Crafty.e("2D, DOM, Text, Recorder");
         board.attr({x: 200, y: 0, off_x:30, off_y:32, z:50, cell_w: 60, cell_h: 64});
         komadaiW.attr({x:20, y:20, z:51, name:"+"})
