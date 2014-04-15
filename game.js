@@ -101,6 +101,9 @@ $(document).ready(function() {
                 configurable: true
             });
         },
+        isKomaDai: function() {
+            return true;
+        },
         insert: function(piece) {
             this.piece_stack[piece.piece_name].push(piece);
         },
@@ -147,6 +150,9 @@ $(document).ready(function() {
             .bind("Arrival", this.onArrival);
             this.piece = null;
         },
+        isKomaDai: function() {
+            return false;
+        },
         onDepature: function(evt) {
             "Departure";
             if (this.piece != evt.piece){
@@ -159,8 +165,12 @@ $(document).ready(function() {
             var d = this.game.komaDai[p.piece_color];
             if (this.piece) { //taking something.
                 var q = this.piece;
+                if (p.old_reg.isKomaDai()) {
+                    p.veto = "Can't capture from the KomaDai";
+                    return;
+                }
                 if (q.piece_color == p.piece_color) {
-                    p.veto = true;
+                    p.veto = "Can't capture friend."
                     return;
                 }
                 d.trigger("Arrival", {piece:q});
@@ -267,7 +277,7 @@ $(document).ready(function() {
                 //IE9 supports Object.defineProperty
                 this._defineGetterSetter_defineProperty();
             }
-            this.veto = false;
+            this.veto = null;
             this.requires("2D, DOM, Mouse, Draggable, Sprite, Collision")
             .bind("StartDrag", this.onStartDrag)
             .bind("StopDrag", this.onStopDrag);
@@ -340,8 +350,7 @@ $(document).ready(function() {
             this.old_reg = reg;
             reg.trigger("Departure", {piece: this});
             if (this.veto) {
-                this.veto = false;
-                this.old_reg.trigger("Arrival", {piece: this, reason:"veto"}); //revoke
+                this.revoke(this.veto);
             } else {
                 g_message_relay.trigger("Departure", {region:reg, piece: this});
             }
@@ -361,6 +370,11 @@ $(document).ready(function() {
                 return notFound;
             }
         },
+        revoke: function(reason) {
+            this.veto = null;
+            console.log(this, reason);
+            this.old_reg.trigger("Arrival", {piece: this, veto: reason});
+        },
         onStopDrag: function(evt) {
             this._report_evt(evt);
             this.attr({z: 1000});
@@ -368,8 +382,7 @@ $(document).ready(function() {
             //snap to grid, promote, moving taken piece to komadai, unpromote, etc
             reg.trigger("Arrival", {piece: this});
             if (this.veto) {
-                this.veto = false;
-                this.old_reg.trigger("Arrival", {piece: this, reason: "veto"}); //revoke
+                this.revoke(this.veto);
             } else {
                 g_message_relay.trigger("Arrival", {region:reg, piece: this});
             }
