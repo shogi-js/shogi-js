@@ -144,14 +144,39 @@ $(document).ready(function() {
             this.requires("Region")
             .bind("Departure", this.onDepature)
             .bind("Arrival", this.onArrival);
+            this.piece = null;
         },
         onDepature: function(evt) {
             "Departure";
+            if (this.piece != evt.piece){
+                console.log("!! bad piece on", this)
+            }
+            this.piece = null;
         },
         onArrival: function(evt) {
-            var piece = evt.piece;
-            piece.x = this.x;
-            piece.y = this.y;
+            var p = evt.piece;
+            var d = this.game.komaDai[p.piece_color];
+            if (this.piece) { //taking something.
+                var q = this.piece;
+                if (q.piece_color == p.piece_color) {
+                    //Fail the move, how?
+                    p.veto = true;
+                    return;
+                }
+            };
+            this.piece = p;
+            if (this.idx_y > 0 && this.idx_y < 4 && p.piece_color == '+'){
+                //just for test
+                p.promote();
+                p.updateSprite();
+            }
+            if (this.idx_y > 6 && this.idx_y < 10 && p.piece_color == '-'){
+                //just for test
+                p.promote();
+                p.updateSprite();
+            }
+            p.x = this.x;
+            p.y = this.y;
         },
     });
 
@@ -239,6 +264,7 @@ $(document).ready(function() {
                 //IE9 supports Object.defineProperty
                 this._defineGetterSetter_defineProperty();
             }
+            this.veto = false;
             this.requires("2D, DOM, Mouse, Draggable, Sprite, Collision")
             .bind("StartDrag", this.onStartDrag)
             .bind("StopDrag", this.onStopDrag);
@@ -314,43 +340,42 @@ $(document).ready(function() {
         onStartDrag: function(evt) {
             this._report_evt(evt);
             this.attr({z: 2000});
-            this.old_x = this.x;
-            this.old_y = this.y;
             var xs = this.hit("Region");
-            if (xs) {
-                var reg = _.max(xs, function(obj) {
-                    return Math.abs(obj.overlap);
-                }).obj;
-            } else {
-                // Never.
-            }
+            var reg = this.findBestRegion(null);
+            this.old_reg = reg;
             reg.trigger("Departure", {piece: this});
-            g_message_relay.trigger("Departure", {region:reg, piece: this});
+            if (this.veto) {
+                this.veto = false;
+            } else {
+                g_message_relay.trigger("Departure", {region:reg, piece: this});
+            }
         },
         updateSprite: function() {
             var xs = koma_sprite_mapping[this.piece_sprite_name];
             this.sprite(xs[0], xs[1], xs[2], xs[3]);
             return;
         },
+        findBestRegion: function(notFound) {
+            var xs = this.hit("Region");
+            if (xs) {
+                return _.max(xs, function(obj) {
+                    return Math.abs(obj.overlap);
+                }).obj;
+            }else{
+                return notFound;
+            }
+        },
         onStopDrag: function(evt) {
             this._report_evt(evt);
             this.attr({z: 1000});
-            var xs = this.hit("Region");
-            if (xs) {
-                var reg = _.max(xs, function(obj) {
-                    return Math.abs(obj.overlap);
-                }).obj;
-                if (reg.idx_y > 0 && reg.idx_y < 4){ //just for test
-                    this.promote();
-                    this.updateSprite();
-                }
-                //snap to grid, promote, moving taken piece to komadai, unpromote, etc
-                reg.trigger("Arrival", {piece: this});
-                g_message_relay.trigger("Arrival", {region:reg, piece: this});
+            var reg = this.findBestRegion(this.old_reg)
+            //snap to grid, promote, moving taken piece to komadai, unpromote, etc
+            reg.trigger("Arrival", {piece: this});
+            if (this.veto) {
+                this.veto = false;
+                this.old_reg.trigger("Arrival", {piece: this}); //revoke
             } else {
-                console.log("bad destination! panic!");
-                this.x = this.old_x;
-                this.y = this.old_y;
+                g_message_relay.trigger("Arrival", {region:reg, piece: this});
             }
         },
         _report_evt: function(evt) {
@@ -411,9 +436,9 @@ $(document).ready(function() {
             var board = this;
             _.each(_.range(1, 10, 1), function (i) {
                 _.each(_.range(1, 10, 1), function (j) {
-                    var entity = Crafty.e("2D, DOM, Text, Region, Collision, Mutex")
-                        .text("" + i + ","+ j)
-                        .attr({
+                    var entity = Crafty.e("2D, DOM, Text, Region, Collision, Mutex");
+                    entity.text("" + i + ","+ j);
+                    entity.attr({
                             visible:false,
                             x: board.i2x(i),
                             y: board.j2y(j),
@@ -421,6 +446,7 @@ $(document).ready(function() {
                             h: board.cell_h,
                             z: 50});
                     entity.attr({idx_x:i, idx_y:j});
+                    entity.game = board.game;
                     board.squares[(i, j)] = entity;
                 });
             });
@@ -536,6 +562,7 @@ $(document).ready(function() {
                         }
                         console.log('entity for', 9 - index, r, pn);
                         var piece = Crafty.e("2D, DOM, Mouse, Draggable, Collision, SpritePiece, Piece");
+                        piece.game = this.game;
                         piece.attr({x:board.i2x(9 - index), 
                                     y:board.j2y(r),
                                     z: 1000,
@@ -563,15 +590,18 @@ $(document).ready(function() {
         Crafty.sprite("assets/mokume.png", {SpriteKomadai: [0, 0, 160, 380]});
         Crafty.sprite("assets/koma.png", {SpritePiece:[0,0,60,64]});
 
+        var game = Crafty.e("");
         var board = Crafty.e("2D, Dom, Board, SpriteBoard");
-        var komadaiW = Crafty.e("2D, Dom, SpriteKomadai, Region, Collision, Stack");
-        var komadaiB = Crafty.e("2D, Dom, SpriteKomadai, Region, Collision, Stack");
-        var recorder = Crafty.e("2D, DOM, Text, Recorder");
+        board.game = game;
         board.attr({x: 200, y: 0, off_x:30, off_y:32, z:50, cell_w: 60, cell_h: 64});
-        komadaiW.attr({x:20, y:20, z:51, name:"+"})
-        komadaiB.attr({x:820, y:240, z:51, name:"-"})
+        game.komaDai = {};
+        game.komaDai['+'] = Crafty.e("2D, Dom, SpriteKomadai, Region, Collision, Stack");
+        game.komaDai['+'].attr({x:20, y:20, z:51, name:"+"})
+        game.komaDai['-'] = Crafty.e("2D, Dom, SpriteKomadai, Region, Collision, Stack");
+        game.komaDai['-'].attr({x:820, y:240, z:51, name:"-"})
         board.layout();
         board.initial_setup();
+        var recorder = Crafty.e("2D, DOM, Text, Recorder");
         recorder.attr({x:0, y:700, w:800, h:200, background_color: "white"});
         recorder.text("test! test! test!");
         /*
