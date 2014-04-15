@@ -135,7 +135,6 @@ $(document).ready(function() {
             console.log(piece, this);
             piece.piece_color = this.name;
             piece.unpromote();
-            piece.updateSprite();
             this.insert(piece);
             this.layout();
         },
@@ -180,7 +179,6 @@ $(document).ready(function() {
             }*/
             p.x = this.x;
             p.y = this.y;
-            p.updateSprite();//#UGH! Some time no change.
             p.trigger("Invalidate"); // maybe don't need this.
         },
     });
@@ -279,12 +277,14 @@ $(document).ready(function() {
         _defineGetterSetter_setter: function () {
             this.__defineSetter__('piece_name', function (v) {
                 this._attr('_piece_name', v);
+                this.updateSprite();
             });
             this.__defineGetter__('piece_name', function () {
                 return this._piece_name;
             });
             this.__defineSetter__('piece_color', function (v) {
                 this._attr('_piece_color', v);
+                this.updateSprite();
             });
             this.__defineGetter__('piece_color', function () {
                 return this._piece_color;
@@ -294,6 +294,7 @@ $(document).ready(function() {
             Object.defineProperty(this, 'piece_name', {
                 set: function (v) {
                     this._attr('_piece_name', v);
+                    this.updateSprite();
                 },
                 get: function () {
                     return this._piece_name;
@@ -303,6 +304,7 @@ $(document).ready(function() {
             Object.defineProperty(this, 'piece_color', {
                 set: function (v) {
                     this._attr('_piece_color', v);
+                    this.updateSprite();
                 },
                 get: function () {
                     return this._piece_color;
@@ -339,7 +341,7 @@ $(document).ready(function() {
             reg.trigger("Departure", {piece: this});
             if (this.veto) {
                 this.veto = false;
-                this.old_reg.trigger("Arrival", {piece: this}); //revoke
+                this.old_reg.trigger("Arrival", {piece: this, reason:"veto"}); //revoke
             } else {
                 g_message_relay.trigger("Departure", {region:reg, piece: this});
             }
@@ -367,7 +369,7 @@ $(document).ready(function() {
             reg.trigger("Arrival", {piece: this});
             if (this.veto) {
                 this.veto = false;
-                this.old_reg.trigger("Arrival", {piece: this}); //revoke
+                this.old_reg.trigger("Arrival", {piece: this, reason: "veto"}); //revoke
             } else {
                 g_message_relay.trigger("Arrival", {region:reg, piece: this});
             }
