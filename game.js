@@ -326,6 +326,9 @@ $(document).ready(function() {
             }
         },
         isPromotable: function(rank) {
+            if (this.old_reg.isKomaDai()){
+                return false;
+            }
             var was = this.old_reg.idx_y;
             var c = this.piece_color;
             return (this.piece_name in this.promotion) 
