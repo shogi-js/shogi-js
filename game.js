@@ -160,6 +160,12 @@ $(document).ready(function() {
             }
             this.piece = null;
         },
+        place: function(p) {
+            this.piece = p;
+            p.x = this.x;
+            p.y = this.y;
+            p.trigger("Invalidate"); // maybe don't need this.
+        },
         onArrival: function(evt) {
             var p = evt.piece;
             var d = this.game.komaDai[p.piece_color];
@@ -175,21 +181,10 @@ $(document).ready(function() {
                 }
                 d.trigger("Arrival", {piece:q});
             };
-            this.piece = p;
-            /*
-            if (this.idx_y > 0 && this.idx_y < 4 && p.piece_color == '+'){
-                //just for test
+            if (p.isPromotable(this.idx_y) && confirm("promote?")) {
                 p.promote();
-                p.updateSprite();
             }
-            if (this.idx_y > 6 && this.idx_y < 10 && p.piece_color == '-'){
-                //just for test
-                p.promote();
-                p.updateSprite();
-            }*/
-            p.x = this.x;
-            p.y = this.y;
-            p.trigger("Invalidate"); // maybe don't need this.
+            this.place(p);
         },
     });
 
@@ -277,6 +272,7 @@ $(document).ready(function() {
                 //IE9 supports Object.defineProperty
                 this._defineGetterSetter_defineProperty();
             }
+            this.promotion = {FU:"TO", KY:"NY", KE:"NK", GI:"NG", KA:"UM", HI:"RY"};
             this.veto = null;
             this.requires("2D, DOM, Mouse, Draggable, Sprite, Collision")
             .bind("StartDrag", this.onStartDrag)
@@ -329,12 +325,17 @@ $(document).ready(function() {
                 return this.piece_name.toLowerCase()
             }
         },
+        isPromotable: function(rank) {
+            var was = this.old_reg.idx_y;
+            var c = this.piece_color;
+            return (this.piece_name in this.promotion) 
+                && ((rank > 0 && rank < 4 && c == '+')
+                    || (was > 0 && was <  4 && c == '+')
+                    || (rank > 6 && rank < 10 && c == '-')
+                    || (was > 6 && was < 10 && c == '-'));
+        },
         promote: function(){
-            var mapping = {FU:"TO", KY:"NY", KE:"NK", GI:"NG", KA:"UM", HI:"RY"}
-            if (this.piece_name in mapping){
-                this.piece_name = mapping[this.piece_name];
-                console.log("promote:", this);
-            }
+            this.piece_name = this.promotion[this.piece_name];
         },
         unpromote: function(){
             var mapping = {TO:"FU", NY:"KY", NK:"KE", NG:"GI", UM:"KA", RY:"HI"}
@@ -569,7 +570,7 @@ $(document).ready(function() {
                                     });
                         console.log('entity for', 9 - x, r, piece.getSpriteName());
                         var reg = board.squares[9 - x][r];
-                        reg.trigger("Arrival", {piece:piece});
+                        reg.place(piece);
                         pieces.push(piece);
 
                     }
