@@ -71,7 +71,9 @@ $(document).ready(function() {
 
     Crafty.c("Stack", {
         init: function () {
-            this.requires("Region");
+            this.requires("Region")
+            .bind("Departure", this.onDepature)
+            .bind("Arrival", this.onArrival);
             if (Crafty.support.setter) {
                 this._defineGetterSetter_setter();
             } else if (Crafty.support.defineProperty) {
@@ -103,9 +105,15 @@ $(document).ready(function() {
             this.piece_stack[piece.piece_name].push(piece);
         },
         pop: function(piece) {
-            this.piece_stack[piece.piece_name].splice(0, 1);
+            console.log(this.piece_stack[piece.piece_name]);
+            var xs = this.piece_stack[piece.piece_name]
+            var ys = _.filter(xs, function(item) {
+                return item != piece;
+            });
+            this.piece_stack[piece.piece_name] = ys;
+            console.log(this.piece_stack[piece.piece_name]);
         },
-        notifyNewPosition: function() {
+        layout: function() {
             var stackable = this;
             var jy = 0;
             _.each(stackable.piece_stack, function(arr) {
@@ -117,21 +125,31 @@ $(document).ready(function() {
                 jy += 1;
             });
         },
-        align: function(piece) {
+        onDepature: function(evt) {
+            "Departure";
+            this.pop(evt.piece);
+            this.layout();
+        },
+        onArrival: function(evt) {
+            var piece = evt.piece;
             piece.piece_color = this.name;
             piece.unpromote();
-            piece.set_side
             this.insert(piece);
-            this.notifyNewPosition();
-            console.log("Stack.align(piece)", this, piece);
+            this.layout();
         },
     });
+
     Crafty.c("Mutex", {
         init: function () {
-            this.requires("Region");
+            this.requires("Region")
+            .bind("Departure", this.onDepature)
+            .bind("Arrival", this.onArrival);
         },
-        align: function(piece) {
-            console.log("Mutex.align(piece)", this, piece);
+        onDepature: function(evt) {
+            "Departure";
+        },
+        onArrival: function(evt) {
+            var piece = evt.piece;
             piece.x = this.x;
             piece.y = this.y;
         },
@@ -306,6 +324,7 @@ $(document).ready(function() {
             } else {
                 // Never.
             }
+            reg.trigger("Departure", {piece: this});
             g_message_relay.trigger("Departure", {region:reg, piece: this});
         },
         updateSprite: function() {
@@ -326,8 +345,7 @@ $(document).ready(function() {
                     this.updateSprite();
                 }
                 //snap to grid, promote, moving taken piece to komadai, unpromote, etc
-                reg.align(this);
-
+                reg.trigger("Arrival", {piece: this});
                 g_message_relay.trigger("Arrival", {region:reg, piece: this});
             } else {
                 console.log("bad destination! panic!");
