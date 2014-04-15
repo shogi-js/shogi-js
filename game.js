@@ -132,8 +132,10 @@ $(document).ready(function() {
         },
         onArrival: function(evt) {
             var piece = evt.piece;
+            console.log(piece, this);
             piece.piece_color = this.name;
             piece.unpromote();
+            piece.updateSprite();
             this.insert(piece);
             this.layout();
         },
@@ -159,12 +161,13 @@ $(document).ready(function() {
             if (this.piece) { //taking something.
                 var q = this.piece;
                 if (q.piece_color == p.piece_color) {
-                    //Fail the move, how?
                     p.veto = true;
                     return;
                 }
+                d.trigger("Arrival", {piece:q});
             };
             this.piece = p;
+            /*
             if (this.idx_y > 0 && this.idx_y < 4 && p.piece_color == '+'){
                 //just for test
                 p.promote();
@@ -174,9 +177,11 @@ $(document).ready(function() {
                 //just for test
                 p.promote();
                 p.updateSprite();
-            }
+            }*/
             p.x = this.x;
             p.y = this.y;
+            p.updateSprite();//#UGH! Some time no change.
+            p.trigger("Invalidate"); // maybe don't need this.
         },
     });
 
@@ -270,7 +275,6 @@ $(document).ready(function() {
             .bind("StopDrag", this.onStopDrag);
         },
         _piece_name: null,
-        _piece_sprite_name: null,
         _piece_color: null,
         _defineGetterSetter_setter: function () {
             this.__defineSetter__('piece_name', function (v) {
@@ -278,12 +282,6 @@ $(document).ready(function() {
             });
             this.__defineGetter__('piece_name', function () {
                 return this._piece_name;
-            });
-            this.__defineSetter__('piece_sprite_name', function (v) {
-                this._attr('_piece_sprite_name', v);
-            });
-            this.__defineGetter__('piece_sprite_name', function () {
-                return this._piece_sprite_name;
             });
             this.__defineSetter__('piece_color', function (v) {
                 this._attr('_piece_color', v);
@@ -302,15 +300,6 @@ $(document).ready(function() {
                 },
                 configurable: true
             });
-            Object.defineProperty(this, 'piece_sprite_name', {
-                set: function (v) {
-                    this._attr('_piece_sprite_name', v);
-                },
-                get: function () {
-                    return this._piece_sprite_name;
-                },
-                configurable: true
-            });
             Object.defineProperty(this, 'piece_color', {
                 set: function (v) {
                     this._attr('_piece_color', v);
@@ -321,13 +310,17 @@ $(document).ready(function() {
                 configurable: true
             });
         },
+        getSpriteName: function() {
+            if (this.piece_color == '+'){
+                return this.piece_name;
+            }else{
+                return this.piece_name.toLowerCase()
+            }
+        },
         promote: function(){
             var mapping = {FU:"TO", KY:"NY", KE:"NK", GI:"NG", KA:"UM", HI:"RY"}
             if (this.piece_name in mapping){
                 this.piece_name = mapping[this.piece_name];
-                if (this.piece_color == '+'){
-                    this.piece_sprite_name = this.piece_name.toLowerCase();
-                }
                 console.log("promote:", this);
             }
         },
@@ -346,12 +339,13 @@ $(document).ready(function() {
             reg.trigger("Departure", {piece: this});
             if (this.veto) {
                 this.veto = false;
+                this.old_reg.trigger("Arrival", {piece: this}); //revoke
             } else {
                 g_message_relay.trigger("Departure", {region:reg, piece: this});
             }
         },
         updateSprite: function() {
-            var xs = koma_sprite_mapping[this.piece_sprite_name];
+            var xs = koma_sprite_mapping[this.getSpriteName()];
             this.sprite(xs[0], xs[1], xs[2], xs[3]);
             return;
         },
@@ -422,7 +416,7 @@ $(document).ready(function() {
 
 
     Crafty.c("Board", {
-        squares: 0,
+        squares: null,
         init: function() {
             this.requires("2D, DOM, SpriteBoard")
             if (Crafty.support.setter) {
@@ -431,10 +425,12 @@ $(document).ready(function() {
                 //IE9 supports Object.defineProperty
                 this._defineGetterSetter_defineProperty();
             }
+            this.squares = {};
         },
         layout: function() {
             var board = this;
             _.each(_.range(1, 10, 1), function (i) {
+                board.squares[i] = {};
                 _.each(_.range(1, 10, 1), function (j) {
                     var entity = Crafty.e("2D, DOM, Text, Region, Collision, Mutex");
                     entity.text("" + i + ","+ j);
@@ -447,7 +443,7 @@ $(document).ready(function() {
                             z: 50});
                     entity.attr({idx_x:i, idx_y:j});
                     entity.game = board.game;
-                    board.squares[(i, j)] = entity;
+                    board.squares[i][j] = entity;
                 });
             });
         },
@@ -542,47 +538,31 @@ $(document).ready(function() {
             var sq = new RegExp("((?:[-+])(?:FU|KY|KE|GI|KI|KA|HI|OU|TO|NY|NK|NG|UM|RY))|( \\* )", 'g');
 
             var pieces = [];
+            var board = this;
+            console.log(board.squares);
             
-            for (var i in this.csa_setup.arguments) {
-                var board = this;
-                var s = this.csa_setup.arguments[i];
-                //console.log(s);
+            _.each(this.csa_setup.arguments, function(s, i, xxx){
                 var xs = s.split(rank);
-                //console.log(xs);
                 var r = parseInt(xs[1]);
-                console.log("i+1 and r", parseInt(i) + 1, r);
-                var x = 1;
-                _.each(xs[2].match(sq), function(elem, index, xs) {
+                _.each(xs[2].match(sq), function(elem, x, ys) {
                     if (elem[0] == '-' || elem[0] == '+') {
-                        var pn;
-                        if (elem[0] == '-') {
-                            pn = elem.substring(1,3).toLowerCase();
-                        } else {
-                            pn = elem.substring(1,3);
-                        }
-                        console.log('entity for', 9 - index, r, pn);
                         var piece = Crafty.e("2D, DOM, Mouse, Draggable, Collision, SpritePiece, Piece");
-                        piece.game = this.game;
-                        piece.attr({x:board.i2x(9 - index), 
-                                    y:board.j2y(r),
-                                    z: 1000,
+                        piece.game = board.game;
+                        piece.attr({z: 1000,
                                     piece_name: elem.substring(1, 3),
-                                    piece_sprite_name: pn,
                                     piece_color: elem[0],
                                     });
-                        console.log(piece, piece.piece_sprite_name);
-                        console.log(koma_sprite_mapping[piece.piece_sprite_name]);
-                        piece.updateSprite();
+                        console.log('entity for', 9 - x, r, piece.getSpriteName());
+                        var reg = board.squares[9 - x][r];
+                        reg.trigger("Arrival", {piece:piece});
                         pieces.push(piece);
 
                     }
-                    //console.log(x, index + 1);
-                    x += 1;
                 })
-            };
+            });
             return pieces;
         },
-    });
+    }); //Crafty.c Board
 
     Crafty.scene("main", function() {
         Crafty.background("#FFFFFF url(assets/tatami.jpg) repeat");
@@ -596,9 +576,9 @@ $(document).ready(function() {
         board.attr({x: 200, y: 0, off_x:30, off_y:32, z:50, cell_w: 60, cell_h: 64});
         game.komaDai = {};
         game.komaDai['+'] = Crafty.e("2D, Dom, SpriteKomadai, Region, Collision, Stack");
-        game.komaDai['+'].attr({x:20, y:20, z:51, name:"+"})
+        game.komaDai['+'].attr({x:820, y:240, z:51, name:"+"})
         game.komaDai['-'] = Crafty.e("2D, Dom, SpriteKomadai, Region, Collision, Stack");
-        game.komaDai['-'].attr({x:820, y:240, z:51, name:"-"})
+        game.komaDai['-'].attr({x:20, y:20, z:51, name:"-"})
         board.layout();
         board.initial_setup();
         var recorder = Crafty.e("2D, DOM, Text, Recorder");
