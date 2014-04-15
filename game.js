@@ -42,19 +42,26 @@ $(document).ready(function() {
                 "assets/opening2.mp3",
                 "assets/snap.mp3",
                 "assets/ncoin.mp3",
+                //"assets/opening2.ogg",
+                //"assets/snap.ogg",
+                //"assets/ncoin.ogg",
+                "assets/opening2.wav",
+                "assets/snap.wav",
+                "assets/ncoin.wav",
                 "assets/koma.png",
                 "assets/board.jpg",
             ], 
             function() {
                 Crafty.scene("main");
-                Crafty.audio.play("assets/opening2.mp3");
-                //Crafty.audio.play("assets/ncoin.mp3");
             },
             function() {
                 // progress
             },
-            function() {
-                alert("loading error.");
+            function(what) {
+                Crafty.e("2D, DOM, Text")
+                    .attr({w: 1000, h: 20, x: 0, y: 120})
+                    .text("error!:"+ what)
+                    .css({"text-align": "center", "font-size": "30px"});
             }
         );
 
@@ -108,13 +115,11 @@ $(document).ready(function() {
             this.piece_stack[piece.piece_name].push(piece);
         },
         pop: function(piece) {
-            console.log(this.piece_stack[piece.piece_name]);
             var xs = this.piece_stack[piece.piece_name]
             var ys = _.filter(xs, function(item) {
                 return item != piece;
             });
             this.piece_stack[piece.piece_name] = ys;
-            console.log(this.piece_stack[piece.piece_name]);
         },
         layout: function() {
             var stackable = this;
@@ -135,7 +140,6 @@ $(document).ready(function() {
         },
         onArrival: function(evt) {
             var piece = evt.piece;
-            console.log(piece, this);
             piece.piece_color = this.name;
             piece.unpromote();
             this.insert(piece);
@@ -179,11 +183,13 @@ $(document).ready(function() {
                     p.veto = "Can't capture friend."
                     return;
                 }
+                Crafty.audio.play("coin");
                 d.trigger("Arrival", {piece:q});
             };
             if (p.isPromotable(this.idx_y) && confirm("promote?")) {
                 p.promote();
             }
+            Crafty.audio.play("snap");
             this.place(p);
         },
     });
@@ -239,7 +245,7 @@ $(document).ready(function() {
         },
     }); //Crafty.c Region
 
-    Crafty.c("MessageRelay", {
+    Crafty.c("Game", {
         init: function () {
             this.requires("obj")
             .bind("Arrival", this.onArrival)
@@ -259,9 +265,7 @@ $(document).ready(function() {
                 listener.trigger("Arrival", evt);
             });
         },
-    }); //Crafty.c MessageRelay 
-
-    var g_message_relay = Crafty.e("MessageRelay");
+    }); //Crafty.c Game
 
 
     Crafty.c("Piece", {
@@ -356,7 +360,7 @@ $(document).ready(function() {
             if (this.veto) {
                 this.revoke(this.veto);
             } else {
-                g_message_relay.trigger("Departure", {region:reg, piece: this});
+                this.game.trigger("Departure", {region:reg, piece: this});
             }
         },
         updateSprite: function() {
@@ -388,7 +392,7 @@ $(document).ready(function() {
             if (this.veto) {
                 this.revoke(this.veto);
             } else {
-                g_message_relay.trigger("Arrival", {region:reg, piece: this});
+                this.game.trigger("Arrival", {region:reg, piece: this});
             }
         },
         _report_evt: function(evt) {
@@ -404,7 +408,6 @@ $(document).ready(function() {
             this.requires("2D, DOM, Text")
             .bind("Arrival", this.onArrival)
             .bind("Departure", this.onDepature);
-            g_message_relay.subscribe(this);
             this.moveList = [];
             var did = this.getDomId();
             $("#"+did).append("<textarea id='csa'></textarea>");
@@ -418,14 +421,18 @@ $(document).ready(function() {
                      +evt.region.locString()
                      +evt.piece.piece_name;
         },
+        startListen: function(game){
+            this.game = game;
+            game.subscribe(this);
+        },
         onArrival: function(evt) {
             //console.log(this.lastEvt);
             //console.log(evt);
             var move_text = this.format_as_csa(evt);
             this.moveList.push(move_text);
             var did = this.getDomId();
-            console.log(move_text, did);
-            this.record.append( move_text + "\n");
+            console.log("Recorder:", move_text, did);
+            this.record.append(move_text + "\n");
         },
         onDepature: function(evt) {
             //console.log(evt);
@@ -588,8 +595,31 @@ $(document).ready(function() {
         Crafty.sprite("assets/board.jpg", {SpriteBoard: [0, 0, 600, 640]});
         Crafty.sprite("assets/mokume.png", {SpriteKomadai: [0, 0, 160, 380]});
         Crafty.sprite("assets/koma.png", {SpritePiece:[0,0,60,64]});
+        
+        _.each(["mp3", "wav", "ogg", "mp4"], function(ext){
+            console.log("audio:", ext, Crafty.audio.supports(ext));
+        });
+        Crafty.audio.add({
+            welcome: [
+                "assets/opening2.mp3", 
+                //"assets/opening2.ogg",
+                "assets/opening2.wav"],
+            snap: [
+                "assets/snap.mp3",
+                //"assets/snap.ogg",
+                "assets/snap.wav"],
+            coin: [
+                "assets/ncoin.mp3",
+                //"assets/ncoin.ogg",
+                "assets/ncoin.wav"]});
+        Crafty.audio.play("welcome");
 
-        var game = Crafty.e("");
+
+        var recorder = Crafty.e("2D, DOM, Text, Recorder");
+        recorder.attr({x:0, y:700, w:800, h:200, background_color: "white"});
+        recorder.text("test! test! test!");
+
+        var game = Crafty.e("Game");
         var board = Crafty.e("2D, Dom, Board, SpriteBoard");
         board.game = game;
         board.attr({x: 200, y: 0, off_x:30, off_y:32, z:50, cell_w: 60, cell_h: 64});
@@ -600,22 +630,6 @@ $(document).ready(function() {
         game.komaDai['-'].attr({x:20, y:20, z:51, name:"-"})
         board.layout();
         board.initial_setup();
-        var recorder = Crafty.e("2D, DOM, Text, Recorder");
-        recorder.attr({x:0, y:700, w:800, h:200, background_color: "white"});
-        recorder.text("test! test! test!");
-        /*
-        var x = 1;
-        var y = 1;
-        for(var i in PIECE_NAMES ){
-            console.log(PIECE_NAMES[i]);
-            var piece = Crafty.e("2D, DOM, Mouse, Draggable, Collision, " + PIECE_NAMES[i] + ", Piece");
-            piece.attr({x:x *20, y:y*20});
-            x += 1;
-            if (x > 9) {
-                y += 1;
-                x = 0
-            }
-        };
-        */
+        recorder.startListen(game);
     });
 })
