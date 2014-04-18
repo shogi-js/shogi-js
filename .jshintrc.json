@@ -1,0 +1,123 @@
+{
+    "strict": "
+       この怪しげな書き方について
+       jsonとしてvalidであるためには, 同じkeyを使って上書きする.
+       jq . ~ で.jshintrcにすること
+       
+       リファレンス日本語訳
+       http://qiita.com/xorphitus/items/f26ec8fbe17c317d3994
+       リファレンス原本
+       http://www.jshint.com/docs/options/
+
+       'use strict' を強制. ECMAScript 5
+    ",
+    "strict" : true,  
+    "esnext" : "ECMAScript 6を許容するならtrue",
+    "esnext" : false,
+    "es3": "ECMAScript 3にとどまるならtrue",
+    "es3" : false, 
+
+    "eqeqeq": "
+       Avoid brokens.
+
+        == 禁止, ===を強制
+    ",
+    "eqeqeq": true, 
+    "curly": "ifとwhileのblockで{}を強制",
+    "curly": true, 
+    "forin": "for in を禁止(warningがでる)",
+    "forin" : true, 
+    "noarg": "arguments.caller, arguments.calleeの仕様を禁止",
+    "noarg": true, 
+    "latedef": "定義先行を強要するならtrue",
+    "latedef": true,
+    "undef": "var宣言されていない変数は禁止",
+    "undef": true,
+    "unused": "未使用の宣言を警告する",
+    "unused": true, 
+
+    "maxdepth": "
+         Generally good thins to do, not just for JavaScript
+         ブロックを3段以上ネストするな
+    ",
+    "maxdepth": 3, 
+    "maxstatements": "20行以上の関数を禁止.",
+    "maxstatements": 20,
+    "maxcomplexity": "
+        循環的複雑度 10である根拠. 
+        http://blog.livedoor.jp/itsoku/archives/29214448.html
+    ",
+    "maxcomplexity": 10,
+    "maxlen": " 一行の最大長",
+    "maxlen" : 80,
+    "indent": "インデントの深さ, wsいくつ？",
+    "indent" : 4,  
+    "trailing": "行末スペース禁止",
+    "trailing": true,
+    "smarttabs": "タブとスペースの混在を禁止(許容するならtrue)",
+    "smarttabs": false,
+    "plusplus": "++と--を禁止",
+    "plusplus": true, 
+
+    "newcap": "
+        コンストラクタ関数は大文字で始めよ
+        JavaScript specific styles
+    ",
+    "newcap": true,
+    "nonew": "返り値を使わないnew SomeThing();を禁止",
+    "nonew": true,
+    "camelcase": "CamelCaseを強制",
+    "camelcase": true,
+    "quotmark": "シングルクォーテーションのみを使用すること",
+    "quotmark": "single", 
+    "regexp": "
+        .とか[^]を使った考えてない感じのパターンを禁止する.
+        see http://stackoverflow.com/questions/2372635/purpose-of-jslint-disallow-insecure-in-regex-option
+    ",
+    "regexp": true, 
+
+    "browser": "
+        JSHint用意されているグローバル変数管理
+        ブラウザ用のやつは許可
+    ",
+    "browser" : true,
+    "devel": " consoleやalertを許可",
+    "devel" : true,  
+    "debug" : "debugger を許可",
+    "debug" : true,  
+    "jquery" : true,
+
+    "dojo": "dojo tool kit",
+    "dojo" :  false,  
+    "couch": "Couch DB",
+    "couch" : false, 
+    "node": " node.jsのプロジェクトではないので",
+    "node": false, 
+    "nonstandard": "よくわからん. 常にfalseがよいのでは?",
+    "nonstandard": false, 
+    "phantom": false,
+
+    "globals": { 
+        "_comment" : "これはglobal変数を追加する方法?",
+        "_": false,
+        "Backbone": false
+    },
+
+    "eqnull": "
+        Relaxing Options - 危険性を認識した上で設定すること
+        == null を許可
+    ",
+    "eqnull" : true,
+    "expr": " x || (x = 1); とかができるようにする",
+    "expr" : true,
+    "bitwise": "bit演算子を禁止するならtrue",
+    "bitwise": true, 
+    "gcl": "Google Cosure Compilerは対応しない. uglifyでいく.",
+    "gcl" : false, 
+    "iterator": "__iterator__は使用しない. underscore使うし.",
+    "iterator" : false, 
+    "moz": "mozilla専用ではないのでfalse.",
+    "moz": false
+}
+
+

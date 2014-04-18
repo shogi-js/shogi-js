@@ -1,0 +1,27 @@
+{
+  "name": "shogi-js",
+  "version": "0.0.0",
+  "homepage": "https://github.com/shogi-js/shogi-js",
+  "authors": [
+    "bgnori <bgnori@gmail.com>"
+  ],
+  "description": "JavaScript library for Shogi (Japanese Chess).",
+  "keywords": [
+    "shogi",
+    "crafty"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "underscore": "~1.6.0",
+    "crafty": "~0.6.2",
+    "jquery": "~2.1.0"
+  }
+}
