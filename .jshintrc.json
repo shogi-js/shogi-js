@@ -100,7 +100,7 @@
     "globals": { 
         "_comment" : "これはglobal変数を追加する方法?",
         "_": false,
-        "Backbone": false
+        "Crafty": false
     },
 
     "eqnull": "
