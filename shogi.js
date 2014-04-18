@@ -1,4 +1,6 @@
+/*global Crafty: false $: false */
 (function(){ //shogi.js
+    "use strict";
     console.log('init shogi.js');
     console.log('assuming ', _, $, Crafty);
 
@@ -464,7 +466,7 @@
             var board = this;
             console.log(board.squares);
             
-            _.each(this.csa_setup.arguments, function(s, i, xxx){
+            _.each(arguments, function(s, i, xxx){
                 var xs = s.split(rank);
                 var r = parseInt(xs[1]);
                 _.each(xs[2].match(sq), function(elem, x, ys) {

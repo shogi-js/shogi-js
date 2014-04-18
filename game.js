@@ -1,5 +1,6 @@
+/*global Crafty: false $: false */
 $(document).ready(function() {
-
+    "use strict";
     Crafty.init(200 + 600 + 200, 1000);
     Crafty.canvas.init();
 
