@@ -80,30 +80,8 @@ var TestBed = {
 
 
             var game = Crafty.e("Shogi");
-            var board = Crafty.e("2D, Dom, Board, SpriteBoard");
-            board.game = game;
-            board.attr({
-                x: 200,
-                y: 0,
-                "offX":30,
-                "offY":32,
-                z:50,
-                "cellW": 60,
-                "cellH": 64
-            });
-            game.komaDai = {};
-            game.komaDai["+"] = Crafty.e(
-                "2D, Dom, SpriteKomadai, Region, Collision, Stack"
-            );
-            game.komaDai["+"].attr({x:820, y:240, z:51, name:"+"});
-            game.komaDai["+"].game = game;
-            game.komaDai["-"] = Crafty.e(
-                "2D, Dom, SpriteKomadai, Region, Collision, Stack"
-            );
-            game.komaDai["-"].attr({x:20, y:20, z:51, name:"-"});
-            game.komaDai["-"].game = game;
-            board.layout();
-            board.initialSetup();
+            game.layout();
+            game.initialSetup()
 
             var recorder = Crafty.e("2D, DOM, Text, Recorder");
             recorder.attr({

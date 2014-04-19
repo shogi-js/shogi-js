@@ -549,19 +549,59 @@
             .bind("Arrival", this.onArrival)
             .bind("Departure", this.onDepature);
             this.listeners = [];
-            this.lasts = [];
+            this.receivedEvents = [];
+            this.makeBoard();
+            this.makeKomaDai();
+        },
+        makeBoard: function() {
+            var game = this;
+            var board = Crafty.e("2D, Dom, Board, SpriteBoard");
+            board.game = game;
+            game.board = board;
+            board.attr({
+                x: 200,
+                y: 0,
+                "offX":30,
+                "offY":32,
+                z:50,
+                "cellW": 60,
+                "cellH": 64
+            });
+        },
+        makeKomaDai: function() {
+            var game = this;
+            game.komaDai = {};
+            game.komaDai["+"] = Crafty.e(
+                "2D, Dom, SpriteKomadai, Region, Collision, Stack"
+            );
+            game.komaDai["+"].attr({x:820, y:240, z:51, name:"+"});
+            game.komaDai["+"].game = game;
+            game.komaDai["-"] = Crafty.e(
+                "2D, Dom, SpriteKomadai, Region, Collision, Stack"
+            );
+            game.komaDai["-"].attr({x:20, y:20, z:51, name:"-"});
+            game.komaDai["-"].game = game;
+        },
+        layout: function() {
+            this.board.layout();
+        },
+        initialSetup: function() {
+            this.board.initialSetup();
         },
         subscribe: function(listener) {
             this.listeners.push(listener);
         },
         onDepature: function(evt) {
-            this.lasts.push(evt);
+            this.receivedEvents.push(evt);
         },
         onArrival: function(evt) {
-            var lastEvt = this.lasts.pop();
+            var lastEvt = this.receivedEvents.pop();
             var cmd = this.makeCommand(lastEvt, evt);
+            this.notify(cmd);
+        },
+        notify: function(cmd) {
             _.each(this.listeners, function(listener) {
-                listener.trigger("Emit", cmd);
+                listener(cmd);
             });
         },
         makeCommand: function(fromEvt, toEvt) {
@@ -594,8 +634,7 @@
 
     Crafty.c("Recorder", {
         init: function () {
-            this.requires("2D, DOM, Text")
-                .bind("Emit", this.onEmit);
+            this.requires("2D, DOM, Text");
             this.moveList = [];
             var did = this.getDomId();
             $("#"+did).append("<textarea id='csa'></textarea>");
@@ -610,11 +649,11 @@
                 evt.piece.pieceName;
         },
         startListen: function(game){
+            var self = this;
             this.game = game;
-            game.subscribe(this);
+            game.subscribe(self.handle);
         },
-        onEmit: function(cmd) {
-            var did = this.getDomId();
+        handle: function(cmd) {
             console.log("Recorder:", cmd);
             //this.record.append(moveText + "\n");
         }
