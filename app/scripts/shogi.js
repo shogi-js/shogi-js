@@ -92,7 +92,7 @@
             var stackable = this;
             var jy = 0;
             _.each(stackable.pieceStack, function(arr) {
-                _.each(arr, function(piece, ix, _unused) {
+                _.each(arr, function(piece, ix) {
                     piece.x = stackable.x + ix* 20; //let be in resource.
                     piece.y = stackable.y + jy* 40; //let be in resource.
                     piece.trigger("Invalidate"); // maybe don"t need this.
@@ -502,10 +502,10 @@
             var board = this;
             console.log(board.squares);
             
-            _.each(arguments, function(s, _unused1, _unused2){
+            _.each(arguments, function(s){
                 var xs = s.split(rank);
                 var r = parseInt(xs[1], 10);
-                _.each(xs[2].match(sq), function(elem, x, _unused3) {
+                _.each(xs[2].match(sq), function(elem, x) {
                     if (elem[0] === "-" || elem[0] === "+") {
                         var piece = Crafty.e("2D, DOM, Mouse, Draggable, Collision, SpritePiece, Piece");
                         piece.game = board.game;
