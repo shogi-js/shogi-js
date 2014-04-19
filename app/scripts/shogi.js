@@ -390,7 +390,9 @@
             _.each(_.range(1, 10, 1), function (i) {
                 board.squares[i] = {};
                 _.each(_.range(1, 10, 1), function (j) {
-                    var entity = Crafty.e("2D, DOM, Text, Region, Collision, Mutex");
+                    var entity = Crafty.e(
+                        "2D, DOM, Text, Region, Collision, Mutex"
+                    );
                     entity.text("" + i + ","+ j);
                     entity.attr({
                         visible:false,
@@ -495,7 +497,8 @@
         csaSetup: function () {
             var rank = new RegExp("^P(\\d)");
             var sq = new RegExp(
-                "((?:[-+])(?:FU|KY|KE|GI|KI|KA|HI|OU|TO|NY|NK|NG|UM|RY))|( \\* )",
+                "((?:[-+])"+
+                "(?:FU|KY|KE|GI|KI|KA|HI|OU|TO|NY|NK|NG|UM|RY))|( \\* )",
                 "g"
             );
             var pieces = [];
@@ -507,13 +510,21 @@
                 var r = parseInt(xs[1], 10);
                 _.each(xs[2].match(sq), function(elem, x) {
                     if (elem[0] === "-" || elem[0] === "+") {
-                        var piece = Crafty.e("2D, DOM, Mouse, Draggable, Collision, SpritePiece, Piece");
+                        var piece = Crafty.e(
+                            "2D, DOM, Mouse, Draggable,"+
+                            "Collision, SpritePiece, Piece"
+                        );
                         piece.game = board.game;
                         piece.attr({z: 1000,
                                     pieceName: elem.substring(1, 3),
                                     pieceColor: elem[0],
                                     });
-                        console.log("entity for", 9 - x, r, piece.getSpriteName());
+                        console.log(
+                            "entity for",
+                            9 - x,
+                            r,
+                            piece.getSpriteName()
+                        );
                         var reg = board.squares[9 - x][r];
                         reg.place(piece);
                         pieces.push(piece);
