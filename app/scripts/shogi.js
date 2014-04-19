@@ -1,10 +1,9 @@
-/*global Crafty: false $: false */
 (function(){ //shogi.js
     "use strict";
-    console.log('init shogi.js');
-    console.log('assuming ', _, $, Crafty);
+    console.log("init shogi.js");
+    console.log("assuming ", _, $, Crafty);
 
-    var koma_sprite_mapping = {KI:[0,0,60,64],
+    var komaSpriteMapping = {KI:[0,0,60,64],
             TO:[60,0,60,64],
             FU:[120,0,60,64],
             ou:[180,0,60,64],
@@ -41,28 +40,37 @@
             .bind("Departure", this.onDepature)
             .bind("Arrival", this.onArrival);
             if (Crafty.support.setter) {
-                this._defineGetterSetter_setter();
+                this._defineGetterSetterXsetter();
             } else if (Crafty.support.defineProperty) {
                 //IE9 supports Object.defineProperty
-                this._defineGetterSetter_defineProperty();
+                this._defineGetterSetterXdefineProperty();
             }
-            this.piece_stack = {FU:[], KY:[], KE:[], GI:[], KI:[], KA:[], HI:[], OU:[]};
+            this.pieceStack = {
+                FU:[],
+                KY:[],
+                KE:[],
+                GI:[],
+                KI:[],
+                KA:[],
+                HI:[],
+                OU:[]
+            };
         },
-        _defineGetterSetter_setter: function () {
-            this.__defineSetter__('piece_stack', function (v) {
-                this._attr('_piece_stack', v);
+        _defineGetterSetterXsetter: function () {
+            this.__defineSetter__("pieceStack", function (v) {
+                this._attr("_pieceStack", v);
             });
-            this.__defineGetter__('piece_stack', function () {
-                return this._piece_stack;
+            this.__defineGetter__("pieceStack", function () {
+                return this._pieceStack;
             });
         },
-        _defineGetterSetter_defineProperty: function () {
-            Object.defineProperty(this, 'piece_stack', {
+        _defineGetterSetterXdefineProperty: function () {
+            Object.defineProperty(this, "pieceStack", {
                 set: function (v) {
-                    this._attr('_piece_stack', v);
+                    this._attr("_pieceStack", v);
                 },
                 get: function () {
-                    return this._piece_stack;
+                    return this._pieceStack;
                 },
                 configurable: true
             });
@@ -71,23 +79,23 @@
             return true;
         },
         insert: function(piece) {
-            this.piece_stack[piece.piece_name].push(piece);
+            this.pieceStack[piece.pieceName].push(piece);
         },
         pop: function(piece) {
-            var xs = this.piece_stack[piece.piece_name]
+            var xs = this.pieceStack[piece.pieceName];
             var ys = _.filter(xs, function(item) {
-                return item != piece;
+                return item !== piece;
             });
-            this.piece_stack[piece.piece_name] = ys;
+            this.pieceStack[piece.pieceName] = ys;
         },
         layout: function() {
             var stackable = this;
             var jy = 0;
-            _.each(stackable.piece_stack, function(arr) {
-                _.each(arr, function(piece, ix, xs) {
+            _.each(stackable.pieceStack, function(arr) {
+                _.each(arr, function(piece, ix, _unused) {
                     piece.x = stackable.x + ix* 20; //let be in resource.
                     piece.y = stackable.y + jy* 40; //let be in resource.
-                    piece.trigger("Invalidate"); // maybe don't need this.
+                    piece.trigger("Invalidate"); // maybe don"t need this.
                 });
                 jy += 1;
             });
@@ -99,7 +107,7 @@
         },
         onArrival: function(evt) {
             var piece = evt.piece;
-            piece.piece_color = this.name;
+            piece.pieceColor = this.name;
             piece.unpromote();
             this.insert(piece);
             this.layout();
@@ -118,8 +126,8 @@
         },
         onDepature: function(evt) {
             "Departure";
-            if (this.piece != evt.piece){
-                console.log("!! bad piece on", this)
+            if (this.piece !== evt.piece){
+                console.log("!! bad piece on", this);
             }
             this.piece = null;
         },
@@ -127,25 +135,25 @@
             this.piece = p;
             p.x = this.x;
             p.y = this.y;
-            p.trigger("Invalidate"); // maybe don't need this.
+            p.trigger("Invalidate"); // maybe don"t need this.
         },
         onArrival: function(evt) {
             var p = evt.piece;
-            var d = this.game.komaDai[p.piece_color];
+            var d = this.game.komaDai[p.pieceColor];
             if (this.piece) { //taking something.
                 var q = this.piece;
-                if (p.old_reg.isKomaDai()) {
+                if (p.oldReg.isKomaDai()) {
                     p.veto = "Can't capture from the KomaDai";
                     return;
                 }
-                if (q.piece_color == p.piece_color) {
-                    p.veto = "Can't capture friend."
+                if (q.pieceColor === p.pieceColor) {
+                    p.veto = "Can't capture friend.";
                     return;
                 }
                 Crafty.audio.play("coin");
                 d.trigger("Arrival", {piece:q});
-            };
-            if (p.isPromotable(this.idx_y) && confirm("promote?")) {
+            }
+            if (p.isPromotable(this.iY) && confirm("promote?")) {
                 p.promote();
             }
             Crafty.audio.play("snap");
@@ -157,141 +165,160 @@
         init: function () {
             this.requires("2D, DOM, Collision");
             if (Crafty.support.setter) {
-                this._defineGetterSetter_setter();
+                this._defineGetterSetterXsetter();
             } else if (Crafty.support.defineProperty) {
                 //IE9 supports Object.defineProperty
-                this._defineGetterSetter_defineProperty();
+                this._defineGetterSetterXdefineProperty();
             }
         },
-        _idx_x: 0,
-        _idx_y: 0,
-        _defineGetterSetter_setter: function () {
-            this.__defineSetter__('idx_x', function (v) {
-                this._attr('_idx_x', v);
+        _iX: 0,
+        _iY: 0,
+        _defineGetterSetterXsetter: function () {
+            this.__defineSetter__("iX", function (v) {
+                this._attr("_iX", v);
             });
-            this.__defineSetter__('idx_y', function (v) {
-                this._attr('_idx_y', v);
+            this.__defineSetter__("iY", function (v) {
+                this._attr("_iY", v);
             });
-            this.__defineGetter__('idx_x', function () {
-                return this._idx_x;
+            this.__defineGetter__("iX", function () {
+                return this._iX;
             });
-            this.__defineGetter__('idx_y', function () {
-                return this._idx_y;
+            this.__defineGetter__("iY", function () {
+                return this._iY;
             });
         },
-        _defineGetterSetter_defineProperty: function () {
-            Object.defineProperty(this, 'idx_x', {
+        _defineGetterSetterXdefineProperty: function () {
+            Object.defineProperty(this, "iX", {
                 set: function (v) {
-                    this._attr('_idx_x', v);
+                    this._attr("_iX", v);
                 },
                 get: function () {
-                    return this._idx_x;
+                    return this._iX;
                 },
                 configurable: true
             });
-            Object.defineProperty(this, 'idx_y', {
+            Object.defineProperty(this, "iY", {
                 set: function (v) {
-                    this._attr('_idx_y', v);
+                    this._attr("_iY", v);
                 },
                 get: function () {
-                    return this._idx_y;
+                    return this._iY;
                 },
                 configurable: true
             });
         },
         locString: function() {
-            return ""+this.idx_x+this.idx_y
+            return ""+this.iX+this.iY;
         },
     }); //Crafty.c Region
 
     Crafty.c("Piece", {
         init: function () {
             if (Crafty.support.setter) {
-                this._defineGetterSetter_setter();
+                this._defineGetterSetterXsetter();
             } else if (Crafty.support.defineProperty) {
                 //IE9 supports Object.defineProperty
-                this._defineGetterSetter_defineProperty();
+                this._defineGetterSetterXdefineProperty();
             }
-            this.promotion = {FU:"TO", KY:"NY", KE:"NK", GI:"NG", KA:"UM", HI:"RY"};
+            this.promotion = {
+                FU:"TO",
+                KY:"NY",
+                KE:"NK",
+                GI:"NG",
+                KA:"UM",
+                HI:"RY"
+            };
             this.veto = null;
             this.requires("2D, DOM, Mouse, Draggable, Sprite, Collision")
             .bind("StartDrag", this.onStartDrag)
             .bind("StopDrag", this.onStopDrag);
         },
-        _piece_name: null,
-        _piece_color: null,
-        _defineGetterSetter_setter: function () {
-            this.__defineSetter__('piece_name', function (v) {
-                this._attr('_piece_name', v);
+        _pieceName: null,
+        _pieceColor: null,
+        _defineGetterSetterXsetter: function () {
+            this.__defineSetter__("pieceName", function (v) {
+                this._attr("_pieceName", v);
                 this.updateSprite();
             });
-            this.__defineGetter__('piece_name', function () {
-                return this._piece_name;
+            this.__defineGetter__("pieceName", function () {
+                return this._pieceName;
             });
-            this.__defineSetter__('piece_color', function (v) {
-                this._attr('_piece_color', v);
+            this.__defineSetter__("pieceColor", function (v) {
+                this._attr("_pieceColor", v);
                 this.updateSprite();
             });
-            this.__defineGetter__('piece_color', function () {
-                return this._piece_color;
+            this.__defineGetter__("pieceColor", function () {
+                return this._pieceColor;
             });
         },
-        _defineGetterSetter_defineProperty: function () {
-            Object.defineProperty(this, 'piece_name', {
+        _defineGetterSetterXdefineProperty: function () {
+            Object.defineProperty(this, "pieceName", {
                 set: function (v) {
-                    this._attr('_piece_name', v);
+                    this._attr("_pieceName", v);
                     this.updateSprite();
                 },
                 get: function () {
-                    return this._piece_name;
+                    return this._pieceName;
                 },
                 configurable: true
             });
-            Object.defineProperty(this, 'piece_color', {
+            Object.defineProperty(this, "pieceColor", {
                 set: function (v) {
-                    this._attr('_piece_color', v);
+                    this._attr("_pieceColor", v);
                     this.updateSprite();
                 },
                 get: function () {
-                    return this._piece_color;
+                    return this._pieceColor;
                 },
                 configurable: true
             });
         },
         getSpriteName: function() {
-            if (this.piece_color == '+'){
-                return this.piece_name;
+            if (this.pieceColor === "+"){
+                return this.pieceName;
             }else{
-                return this.piece_name.toLowerCase()
+                return this.pieceName.toLowerCase();
             }
         },
         isPromotable: function(rank) {
-            if (this.old_reg.isKomaDai()){
+            if (this.oldReg.isKomaDai()){
                 return false;
             }
-            var was = this.old_reg.idx_y;
-            var c = this.piece_color;
-            return (this.piece_name in this.promotion) 
-                && ((rank > 0 && rank < 4 && c == '+')
-                    || (was > 0 && was <  4 && c == '+')
-                    || (rank > 6 && rank < 10 && c == '-')
-                    || (was > 6 && was < 10 && c == '-'));
+            var was = this.oldReg.iY;
+            var c = this.pieceColor;
+            return (this.pieceName in this.promotion) && (
+                this.isInFieldOf(c, rank) ||
+                this.isInFieldOf(c, was));
+        },
+        isInFieldOf: function(color, y) {
+            if (color === "+") {
+                return (y > 0 && y < 4);
+            }
+            if (color === "-") {
+                return y > 6 && y < 10;
+            }
         },
         promote: function(){
-            this.piece_name = this.promotion[this.piece_name];
+            this.pieceName = this.promotion[this.pieceName];
         },
         unpromote: function(){
-            var mapping = {TO:"FU", NY:"KY", NK:"KE", NG:"GI", UM:"KA", RY:"HI"}
-            if (this.piece_name in mapping){
-                this.piece_name = mapping[this.piece_name];
+            var mapping = {
+                TO:"FU",
+                NY:"KY",
+                NK:"KE",
+                NG:"GI",
+                UM:"KA",
+                RY:"HI"
+            };
+            if (this.pieceName in mapping){
+                this.pieceName = mapping[this.pieceName];
             }
         },
         onStartDrag: function(evt) {
-            this._report_evt(evt);
+            this._reportEvt(evt);
             this.attr({z: 2000});
-            var xs = this.hit("Region");
             var reg = this.findBestRegion(null);
-            this.old_reg = reg;
+            this.oldReg = reg;
             reg.trigger("Departure", {piece: this});
             if (this.veto) {
                 this.revoke(this.veto);
@@ -300,7 +327,7 @@
             }
         },
         updateSprite: function() {
-            var xs = koma_sprite_mapping[this.getSpriteName()];
+            var xs = komaSpriteMapping[this.getSpriteName()];
             this.sprite(xs[0], xs[1], xs[2], xs[3]);
             return;
         },
@@ -317,13 +344,19 @@
         revoke: function(reason) {
             this.veto = null;
             console.log(this, reason);
-            this.old_reg.trigger("Arrival", {piece: this, veto: reason});
+            this.oldReg.trigger("Arrival", {piece: this, veto: reason});
         },
         onStopDrag: function(evt) {
-            this._report_evt(evt);
+            this._reportEvt(evt);
             this.attr({z: 1000});
-            var reg = this.findBestRegion(this.old_reg)
-            //snap to grid, promote, moving taken piece to komadai, unpromote, etc
+            var reg = this.findBestRegion(this.oldReg);
+            /*
+             * Things to be handled on Arrival:
+             * snap to grid, 
+             * promote, 
+             * moving taken piece to komadai, 
+             * unpromote
+             */
             reg.trigger("Arrival", {piece: this});
             if (this.veto) {
                 this.revoke(this.veto);
@@ -331,9 +364,9 @@
                 this.game.trigger("Arrival", {region:reg, piece: this});
             }
         },
-        _report_evt: function(evt) {
+        _reportEvt: function(evt) {
             console.log(evt);
-            console.log('Piece', this._entityName);
+            console.log("Piece", this._entityName);
             console.log("Event X, y", evt.clientX, evt.clientY);
             console.log("x,y", this.x, this.y);
         },
@@ -343,12 +376,12 @@
     Crafty.c("Board", {
         squares: null,
         init: function() {
-            this.requires("2D, DOM, SpriteBoard")
+            this.requires("2D, DOM, SpriteBoard");
             if (Crafty.support.setter) {
-                this._defineGetterSetter_setter();
+                this._defineGetterSetterXsetter();
             } else if (Crafty.support.defineProperty) {
                 //IE9 supports Object.defineProperty
-                this._defineGetterSetter_defineProperty();
+                this._defineGetterSetterXdefineProperty();
             }
             this.squares = {};
         },
@@ -360,94 +393,95 @@
                     var entity = Crafty.e("2D, DOM, Text, Region, Collision, Mutex");
                     entity.text("" + i + ","+ j);
                     entity.attr({
-                            visible:false,
-                            x: board.i2x(i),
-                            y: board.j2y(j),
-                            w: board.cell_w,
-                            h: board.cell_h,
-                            z: 50});
-                    entity.attr({idx_x:i, idx_y:j});
+                        visible:false,
+                        x: board.i2x(i),
+                        y: board.j2y(j),
+                        w: board.cellW,
+                        h: board.cellH,
+                        z: 50
+                    });
+                    entity.attr({iX:i, iY:j});
                     entity.game = board.game;
                     board.squares[i][j] = entity;
                 });
             });
         },
         i2x: function(idx) {
-            return (9 - idx) * this.cell_w + this.off_x + this.x;
+            return (9 - idx) * this.cellW + this.offX + this.x;
         },
         j2y: function (idx) {
-            return (idx - 1) * this.cell_h + this.off_y + this.y;
+            return (idx - 1) * this.cellH + this.offY + this.y;
         },
-        _off_x: 0,
-        _off_y: 0,
-        _cell_w: 0,
-        _cell_h: 0,
-        _defineGetterSetter_setter: function () {
-            this.__defineSetter__('off_x', function (v) {
-                this._attr('_off_x', v);
+        _offX: 0,
+        _offY: 0,
+        _cellW: 0,
+        _cellH: 0,
+        _defineGetterSetterXsetter: function () {
+            this.__defineSetter__("offX", function (v) {
+                this._attr("_offX", v);
             });
-            this.__defineGetter__('off_x', function () {
-                return this._off_x;
+            this.__defineGetter__("offX", function () {
+                return this._offX;
             });
-            this.__defineSetter__('off_y', function (v) {
-                this._attr('_off_y', v);
+            this.__defineSetter__("offY", function (v) {
+                this._attr("_offY", v);
             });
-            this.__defineGetter__('off_y', function () {
-                return this._off_y;
+            this.__defineGetter__("offY", function () {
+                return this._offY;
             });
-            this.__defineSetter__('cell_w', function (v) {
-                this._attr('_cell_w', v);
+            this.__defineSetter__("cellW", function (v) {
+                this._attr("_cellW", v);
             });
-            this.__defineGetter__('cell_w', function () {
-                return this._cell_w;
+            this.__defineGetter__("cellW", function () {
+                return this._cellW;
             });
-            this.__defineSetter__('cell_h', function (v) {
-                this._attr('_cell_h', v);
+            this.__defineSetter__("cellH", function (v) {
+                this._attr("_cellH", v);
             });
-            this.__defineGetter__('cell_h', function () {
-                return this._cell_h;
-            });
-        },
-        _defineGetterSetter_defineProperty: function () {
-            Object.defineProperty(this, 'off_x', {
-                set: function (v) {
-                    this._attr('_off_x', v);
-                },
-                get: function () {
-                    return this._off_x;
-                },
-                configurable: true
-            });
-            Object.defineProperty(this, 'off_y', {
-                set: function (v) {
-                    this._attr('_off_y', v);
-                },
-                get: function () {
-                    return this._off_y;
-                },
-                configurable: true
-            });
-            Object.defineProperty(this, 'cell_w', {
-                set: function (v) {
-                    this._attr('_cell_w', v);
-                },
-                get: function () {
-                    return this._cell_w;
-                },
-                configurable: true
-            });
-            Object.defineProperty(this, 'cell_h', {
-                set: function (v) {
-                    this._attr('_cell_h', v);
-                },
-                get: function () {
-                    return this._cell_h;
-                },
-                configurable: true
+            this.__defineGetter__("cellH", function () {
+                return this._cellH;
             });
         },
-        initial_setup: function() {
-            this.csa_setup(
+        _defineGetterSetterXdefineProperty: function () {
+            Object.defineProperty(this, "offX", {
+                set: function (v) {
+                    this._attr("_offX", v);
+                },
+                get: function () {
+                    return this._offX;
+                },
+                configurable: true
+            });
+            Object.defineProperty(this, "offY", {
+                set: function (v) {
+                    this._attr("_offY", v);
+                },
+                get: function () {
+                    return this._offY;
+                },
+                configurable: true
+            });
+            Object.defineProperty(this, "cellW", {
+                set: function (v) {
+                    this._attr("_cellW", v);
+                },
+                get: function () {
+                    return this._cellW;
+                },
+                configurable: true
+            });
+            Object.defineProperty(this, "cellH", {
+                set: function (v) {
+                    this._attr("_cellH", v);
+                },
+                get: function () {
+                    return this._cellH;
+                },
+                configurable: true
+            });
+        },
+        initialSetup: function() {
+            this.csaSetup(
                 "P1-KY-KE-GI-KI-OU-KI-GI-KE-KY",
                 "P2 * -HI *  *  *  *  * -KA * ",
                 "P3-FU-FU-FU-FU-FU-FU-FU-FU-FU",
@@ -458,32 +492,34 @@
                 "P8 * +KA *  *  *  *  * +HI * ",
                 "P9+KY+KE+GI+KI+OU+KI+GI+KE+KY");
         },
-        csa_setup: function (argv) {
+        csaSetup: function () {
             var rank = new RegExp("^P(\\d)");
-            var sq = new RegExp("((?:[-+])(?:FU|KY|KE|GI|KI|KA|HI|OU|TO|NY|NK|NG|UM|RY))|( \\* )", 'g');
-
+            var sq = new RegExp(
+                "((?:[-+])(?:FU|KY|KE|GI|KI|KA|HI|OU|TO|NY|NK|NG|UM|RY))|( \\* )",
+                "g"
+            );
             var pieces = [];
             var board = this;
             console.log(board.squares);
             
-            _.each(arguments, function(s, i, xxx){
+            _.each(arguments, function(s, _unused1, _unused2){
                 var xs = s.split(rank);
-                var r = parseInt(xs[1]);
-                _.each(xs[2].match(sq), function(elem, x, ys) {
-                    if (elem[0] == '-' || elem[0] == '+') {
+                var r = parseInt(xs[1], 10);
+                _.each(xs[2].match(sq), function(elem, x, _unused3) {
+                    if (elem[0] === "-" || elem[0] === "+") {
                         var piece = Crafty.e("2D, DOM, Mouse, Draggable, Collision, SpritePiece, Piece");
                         piece.game = board.game;
                         piece.attr({z: 1000,
-                                    piece_name: elem.substring(1, 3),
-                                    piece_color: elem[0],
+                                    pieceName: elem.substring(1, 3),
+                                    pieceColor: elem[0],
                                     });
-                        console.log('entity for', 9 - x, r, piece.getSpriteName());
+                        console.log("entity for", 9 - x, r, piece.getSpriteName());
                         var reg = board.squares[9 - x][r];
                         reg.place(piece);
                         pieces.push(piece);
 
                     }
-                })
+                });
             });
             return pieces;
         },
@@ -513,21 +549,22 @@
 
 
     Crafty.c("Recorder", {
-        init: function () { this.requires("2D, DOM, Text")
-            .bind("Arrival", this.onArrival)
-            .bind("Departure", this.onDepature);
+        init: function () {
+            this.requires("2D, DOM, Text")
+                .bind("Arrival", this.onArrival)
+                .bind("Departure", this.onDepature);
             this.moveList = [];
             var did = this.getDomId();
             $("#"+did).append("<textarea id='csa'></textarea>");
-            this.record = $("#csa")
+            this.record = $("#csa");
         },
         lastEvt: null,
         moveList: null,
-        format_as_csa: function(evt) {
-            return ""+evt.piece.piece_color
-                     +this.lastEvt.region.locString()
-                     +evt.region.locString()
-                     +evt.piece.piece_name;
+        formatAsCSA: function(evt) {
+            return "" + evt.piece.pieceColor +
+                this.lastEvt.region.locString() +
+                evt.region.locString() +
+                evt.piece.pieceName;
         },
         startListen: function(game){
             this.game = game;
@@ -536,11 +573,11 @@
         onArrival: function(evt) {
             //console.log(this.lastEvt);
             //console.log(evt);
-            var move_text = this.format_as_csa(evt);
-            this.moveList.push(move_text);
+            var moveText = this.formatAsCSA(evt);
+            this.moveList.push(moveText);
             var did = this.getDomId();
-            console.log("Recorder:", move_text, did);
-            this.record.append(move_text + "\n");
+            console.log("Recorder:", moveText, did);
+            this.record.append(moveText + "\n");
         },
         onDepature: function(evt) {
             //console.log(evt);

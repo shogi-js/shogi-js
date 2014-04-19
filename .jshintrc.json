@@ -68,8 +68,12 @@
     "nonew": true,
     "camelcase": "CamelCaseを強制",
     "camelcase": true,
-    "quotmark": "シングルクォーテーションのみを使用すること",
-    "quotmark": "single", 
+    "quotmark": "
+        どっちでもいいけど一方に揃える.
+        今回は既存のコードがdouble quoteが優位なのでそっちにあわせる.
+        http://www.2ality.com/2012/09/javascript-quotes.html
+    ",
+    "quotmark": "double", 
     "regexp": "
         .とか[^]を使った考えてない感じのパターンを禁止する.
         see http://stackoverflow.com/questions/2372635/purpose-of-jslint-disallow-insecure-in-regex-option
@@ -100,7 +104,9 @@
     "globals": { 
         "_comment" : "これはglobal変数を追加する方法?",
         "_": false,
-        "Crafty": false
+        "underscore": false,
+        "Crafty": false,
+        "require": false
     },
 
     "eqnull": "
