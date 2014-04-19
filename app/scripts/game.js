@@ -96,10 +96,12 @@ var TestBed = {
                 "2D, Dom, SpriteKomadai, Region, Collision, Stack"
             );
             game.komaDai["+"].attr({x:820, y:240, z:51, name:"+"});
+            game.komaDai["+"].game = game;
             game.komaDai["-"] = Crafty.e(
                 "2D, Dom, SpriteKomadai, Region, Collision, Stack"
             );
             game.komaDai["-"].attr({x:20, y:20, z:51, name:"-"});
+            game.komaDai["-"].game = game;
             board.layout();
             board.initialSetup();
 

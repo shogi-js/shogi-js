@@ -104,13 +104,16 @@
             "Departure";
             this.pop(evt.piece);
             this.layout();
+            this.game.trigger("Departure", {region:this, piece: evt.piece});
         },
         onArrival: function(evt) {
+            "Arrival";
             var piece = evt.piece;
             piece.pieceColor = this.name;
             piece.unpromote();
             this.insert(piece);
             this.layout();
+            this.game.trigger("Arrival", {region:this, piece: piece, promoted: false});
         },
     }); //Crafty.c Stack
 
@@ -130,6 +133,7 @@
                 console.log("!! bad piece on", this);
             }
             this.piece = null;
+            this.game.trigger("Departure", {region:this, piece: evt.piece});
         },
         place: function(p) {
             this.piece = p;
@@ -140,6 +144,7 @@
         onArrival: function(evt) {
             var p = evt.piece;
             var d = this.game.komaDai[p.pieceColor];
+            var promoted = false;
             if (this.piece) { //taking something.
                 var q = this.piece;
                 if (p.oldReg.isKomaDai()) {
@@ -151,13 +156,16 @@
                     return;
                 }
                 Crafty.audio.play("coin");
+                this.trigger("Departure", {piece:q});
                 d.trigger("Arrival", {piece:q});
             }
             if (p.isPromotable(this.iY) && confirm("promote?")) {
                 p.promote();
+                promoted = true;
             }
             Crafty.audio.play("snap");
             this.place(p);
+            this.game.trigger("Arrival", {region:this, piece: p, promoted: promoted});
         },
     }); //Crafty.c Mutex
 
@@ -323,7 +331,6 @@
             if (this.veto) {
                 this.revoke(this.veto);
             } else {
-                this.game.trigger("Departure", {region:reg, piece: this});
             }
         },
         updateSprite: function() {
@@ -345,6 +352,7 @@
             this.veto = null;
             console.log(this, reason);
             this.oldReg.trigger("Arrival", {piece: this, veto: reason});
+            this.oldReg = null;
         },
         onStopDrag: function(evt) {
             this._reportEvt(evt);
@@ -361,7 +369,6 @@
             if (this.veto) {
                 this.revoke(this.veto);
             } else {
-                this.game.trigger("Arrival", {region:reg, piece: this});
             }
         },
         _reportEvt: function(evt) {
@@ -542,28 +549,53 @@
             .bind("Arrival", this.onArrival)
             .bind("Departure", this.onDepature);
             this.listeners = [];
+            this.lasts = [];
         },
         subscribe: function(listener) {
             this.listeners.push(listener);
         },
         onDepature: function(evt) {
-            _.each(this.listeners, function(listener) {
-                listener.trigger("Departure", evt);
-            });
+            this.lasts.push(evt);
         },
         onArrival: function(evt) {
+            var lastEvt = this.lasts.pop();
+            var cmd = this.makeCommand(lastEvt, evt);
             _.each(this.listeners, function(listener) {
-                listener.trigger("Arrival", evt);
+                listener.trigger("Emit", cmd);
             });
         },
+        makeCommand: function(fromEvt, toEvt) {
+            var cmd = {};
+            /* fromEvt.piece === toEvt.piece */
+            cmd.piece = toEvt.piece.pieceName;
+            cmd.side = toEvt.piece.pieceColor;
+            cmd.promoted = toEvt.promoted;
+
+            if (fromEvt.region.isKomaDai()){
+                cmd.fromKomadai = true;
+            } else {
+                cmd.fromKomadai = false;
+                cmd.fromX = fromEvt.region.iX;
+                cmd.fromY = fromEvt.region.iY;
+            }
+
+            if (toEvt.region.isKomaDai()){
+                cmd.toKomadai = true;
+            } else {
+                cmd.toKomadai = false;
+                cmd.toX = toEvt.region.iX;
+                cmd.toY = toEvt.region.iY;
+            }
+
+            return cmd;
+        }
     }); //Crafty.c Shogi
 
 
     Crafty.c("Recorder", {
         init: function () {
             this.requires("2D, DOM, Text")
-                .bind("Arrival", this.onArrival)
-                .bind("Departure", this.onDepature);
+                .bind("Emit", this.onEmit);
             this.moveList = [];
             var did = this.getDomId();
             $("#"+did).append("<textarea id='csa'></textarea>");
@@ -581,19 +613,11 @@
             this.game = game;
             game.subscribe(this);
         },
-        onArrival: function(evt) {
-            //console.log(this.lastEvt);
-            //console.log(evt);
-            var moveText = this.formatAsCSA(evt);
-            this.moveList.push(moveText);
+        onEmit: function(cmd) {
             var did = this.getDomId();
-            console.log("Recorder:", moveText, did);
-            this.record.append(moveText + "\n");
-        },
-        onDepature: function(evt) {
-            //console.log(evt);
-            this.lastEvt = evt;
-        },
+            console.log("Recorder:", cmd);
+            //this.record.append(moveText + "\n");
+        }
     }); //Crafty.c Recorder
 
 })(); //shogi.js
