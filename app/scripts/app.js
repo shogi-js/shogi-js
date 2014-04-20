@@ -7,4 +7,5 @@ require("scripts/shogi");
 require("scripts/game");
 
 //Crafty.debugBar.show();
+TestBed.start();
 

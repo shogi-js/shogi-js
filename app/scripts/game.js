@@ -102,7 +102,7 @@ var TestBed = {
                 fromY: 7,
                 toX: 7,
                 toY: 6,
-                side: "+",
+                side: "+"
             });
             shogi.handleCommand({
                 fromPiece:"FU",
@@ -112,7 +112,7 @@ var TestBed = {
                 fromKomadai: false,
                 fromX: 7,
                 fromY: 3,
-                side: "+",
+                side: "+"
             });
             shogi.handleCommand({
                 fromPiece:"FU",
@@ -124,7 +124,7 @@ var TestBed = {
                 fromY: 6,
                 toX: 7,
                 toY: 3,
-                side: "+",
+                side: "+"
             });
         });
         Crafty.scene("loading");
