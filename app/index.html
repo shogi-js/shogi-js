@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html ng-app>
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -18,7 +18,9 @@
         <script src="bower_components/underscore/underscore.js"></script>
         <script src="bower_components/jquery/dist/jquery.js"></script>
         <script src="bower_components/crafty/dist/crafty.js"></script>
+        <!-- <script src="bower_components/angularjs/dist/crafty.js"></script> -->
         <!-- endbuild -->
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.13/angular.js"></script>
 
         <!-- build:js scripts/crafty_debug.js -->
         <!-- <script src="libs/CraftyDebug/craftyDebug.js"></script> -->
@@ -29,5 +31,15 @@
         <!-- build:js(.tmp) scripts/combined-scripts.js -->
         <script src="scripts/combined-scripts.js"></script>
         <!-- endbuild -->
+
+        <div>
+            <label> name:</label>
+            <input 
+                type="text" 
+                ng-model="yourName" 
+                placeholder="put your name here" />
+            <hr>
+            <span> Hello! {{yourName}} </span>
+        </div>
     </body>
 </html>

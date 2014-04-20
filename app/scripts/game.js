@@ -130,5 +130,5 @@ var TestBed = {
         Crafty.scene("loading");
     },
 };
-
 TestBed.start();
+
