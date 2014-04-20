@@ -92,6 +92,40 @@ var TestBed = {
             });
             recorder.text("test! test! test!");
             recorder.startListen(shogi);
+            shogi.handleCommand({
+                fromPiece:"FU",
+                toPiece:"FU",
+                toKomadai: false,
+                fromKomadai: false,
+                promoted: false,
+                fromX: 7,
+                fromY: 7,
+                toX: 7,
+                toY: 6,
+                side: "+",
+            });
+            shogi.handleCommand({
+                fromPiece:"FU",
+                toPiece:"FU",
+                promoted: false,
+                toKomadai: true,
+                fromKomadai: false,
+                fromX: 7,
+                fromY: 3,
+                side: "+",
+            });
+            shogi.handleCommand({
+                fromPiece:"FU",
+                toPiece:"FU",
+                toKomadai: false,
+                fromKomadai: false,
+                promoted: true,
+                fromX: 7,
+                fromY: 6,
+                toX: 7,
+                toY: 3,
+                side: "+",
+            });
         });
         Crafty.scene("loading");
     },

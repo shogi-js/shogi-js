@@ -100,6 +100,9 @@
                 jy += 1;
             });
         },
+        peekPieceByName: function(pieceName) {
+            return this.pieceStack[pieceName];
+        },
         onDepature: function(evt) {
             "Departure";
             this._pop(evt.piece);
@@ -135,7 +138,7 @@
             this.piece = null;
             this.shogi.trigger("Departure", {region:this, piece: evt.piece});
         },
-        place: function(p) {
+        _place: function(p) {
             this.piece = p;
             p.x = this.x;
             p.y = this.y;
@@ -145,26 +148,34 @@
             var p = evt.piece;
             var d = this.shogi.komaDai[p.pieceColor];
             var promoted = false;
-            if (this.piece) { //taking something.
-                var q = this.piece;
-                if (p.oldReg.isKomaDai()) {
-                    p.veto = "Can't capture from the KomaDai";
-                    return;
+            if (evt.byCommand) {
+                // command must clean dst region BEFORE putting piece in.
+                if (evt.promoted) {
+                    p.promote();
+                    promoted = true;
                 }
-                if (q.pieceColor === p.pieceColor) {
-                    p.veto = "Can't capture friend.";
-                    return;
+            } else {
+                if (this.piece) { //taking something.
+                    var q = this.piece;
+                    if (p.oldReg.isKomaDai()) {
+                        p.veto = "Can't capture from the KomaDai";
+                        return;
+                    }
+                    if (q.pieceColor === p.pieceColor) {
+                        p.veto = "Can't capture friend.";
+                        return;
+                    }
+                    Crafty.audio.play("coin");
+                    this.trigger("Departure", {piece:q});
+                    d.trigger("Arrival", {piece:q});
                 }
-                Crafty.audio.play("coin");
-                this.trigger("Departure", {piece:q});
-                d.trigger("Arrival", {piece:q});
-            }
-            if (p.isPromotable(this.iY) && confirm("promote?")) {
-                p.promote();
-                promoted = true;
+                if (p.isPromotable(this.iY) && confirm("promote?")) {
+                    p.promote();
+                    promoted = true;
+                }
             }
             Crafty.audio.play("snap");
-            this.place(p);
+            this._place(p);
             this.shogi.trigger("Arrival", {region:this, piece: p, promoted: promoted});
         },
     }); //Crafty.c Mutex
@@ -533,7 +544,7 @@
                             piece.getSpriteName()
                         );
                         var reg = board.squares[9 - x][r];
-                        reg.place(piece);
+                        reg._place(piece); //fix this
                         pieces.push(piece);
 
                     }
@@ -594,11 +605,14 @@
         subscribe: function(listener) {
             this.listeners.push(listener);
         },
+        getLastEvent: function() {
+            return this.receivedEvents.pop();
+        },
         onDepature: function(evt) {
             this.receivedEvents.push(evt);
         },
         onArrival: function(evt) {
-            var lastEvt = this.receivedEvents.pop();
+            var lastEvt = this.getLastEvent();
             var cmd = this.makeCommand(lastEvt, evt);
             this.notify(cmd);
         },
@@ -631,7 +645,36 @@
             }
 
             return cmd;
-        }
+        },
+        handleCommand: function(cmd) {
+            var src = null;
+            var dst = null;
+            var evt = {byCommand: true};
+            
+            if (cmd.fromKomaBukuro) {
+                // not implemented yet.
+                src = this.komaBukuro;
+                evt.piece = src.peekPieceByName(cmd.fromPiece);
+            } else if(cmd.fromKomadai) {
+                src = this.komaDai[cmd.side];
+                evt.piece = d.peekPieceByName(cmd.fromPiece);
+            } else {
+                src = this.board.squares[cmd.fromX][cmd.fromY];
+                evt.piece = src.piece;
+            }
+            src.trigger("Departure", evt);
+
+            if (cmd.toKomaBukuro) {
+                // not implemented yet.
+                dst = this.komaBukuro;
+            } else if(cmd.toKomadai) {
+                dst = this.komaDai[cmd.side];
+            } else {
+                dst = this.board.squares[cmd.toX][cmd.toY];
+                evt.promoted = cmd.promoted;
+            }
+            dst.trigger("Arrival", evt);
+        },
     }); //Crafty.c Shogi
 
 
