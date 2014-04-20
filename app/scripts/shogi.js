@@ -78,17 +78,17 @@
         isKomaDai: function() {
             return true;
         },
-        insert: function(piece) {
+        _insert: function(piece) {
             this.pieceStack[piece.pieceName].push(piece);
         },
-        pop: function(piece) {
+        _pop: function(piece) {
             var xs = this.pieceStack[piece.pieceName];
             var ys = _.filter(xs, function(item) {
                 return item !== piece;
             });
             this.pieceStack[piece.pieceName] = ys;
         },
-        layout: function() {
+        _layoutPiece: function() {
             var stackable = this;
             var jy = 0;
             _.each(stackable.pieceStack, function(arr) {
@@ -102,18 +102,18 @@
         },
         onDepature: function(evt) {
             "Departure";
-            this.pop(evt.piece);
-            this.layout();
-            this.game.trigger("Departure", {region:this, piece: evt.piece});
+            this._pop(evt.piece);
+            this._layoutPiece();
+            this.shogi.trigger("Departure", {region:this, piece: evt.piece});
         },
         onArrival: function(evt) {
             "Arrival";
             var piece = evt.piece;
             piece.pieceColor = this.name;
             piece.unpromote();
-            this.insert(piece);
-            this.layout();
-            this.game.trigger("Arrival", {region:this, piece: piece, promoted: false});
+            this._insert(piece);
+            this._layoutPiece();
+            this.shogi.trigger("Arrival", {region:this, piece: piece, promoted: false});
         },
     }); //Crafty.c Stack
 
@@ -133,7 +133,7 @@
                 console.log("!! bad piece on", this);
             }
             this.piece = null;
-            this.game.trigger("Departure", {region:this, piece: evt.piece});
+            this.shogi.trigger("Departure", {region:this, piece: evt.piece});
         },
         place: function(p) {
             this.piece = p;
@@ -143,7 +143,7 @@
         },
         onArrival: function(evt) {
             var p = evt.piece;
-            var d = this.game.komaDai[p.pieceColor];
+            var d = this.shogi.komaDai[p.pieceColor];
             var promoted = false;
             if (this.piece) { //taking something.
                 var q = this.piece;
@@ -165,7 +165,7 @@
             }
             Crafty.audio.play("snap");
             this.place(p);
-            this.game.trigger("Arrival", {region:this, piece: p, promoted: promoted});
+            this.shogi.trigger("Arrival", {region:this, piece: p, promoted: promoted});
         },
     }); //Crafty.c Mutex
 
@@ -392,7 +392,7 @@
             }
             this.squares = {};
         },
-        layout: function() {
+        makeRegions: function() {
             var board = this;
             _.each(_.range(1, 10, 1), function (i) {
                 board.squares[i] = {};
@@ -410,7 +410,7 @@
                         z: 50
                     });
                     entity.attr({iX:i, iY:j});
-                    entity.game = board.game;
+                    entity.shogi = board.shogi;
                     board.squares[i][j] = entity;
                 });
             });
@@ -521,7 +521,7 @@
                             "2D, DOM, Mouse, Draggable,"+
                             "Collision, SpritePiece, Piece"
                         );
-                        piece.game = board.game;
+                        piece.shogi = board.shogi;
                         piece.attr({z: 1000,
                                     pieceName: elem.substring(1, 3),
                                     pieceColor: elem[0],
@@ -552,12 +552,13 @@
             this.receivedEvents = [];
             this.makeBoard();
             this.makeKomaDai();
+            this.makeKomaBukuro();
         },
         makeBoard: function() {
-            var game = this;
+            var shogi = this;
             var board = Crafty.e("2D, Dom, Board, SpriteBoard");
-            board.game = game;
-            game.board = board;
+            board.shogi = shogi;
+            shogi.board = board;
             board.attr({
                 x: 200,
                 y: 0,
@@ -567,23 +568,25 @@
                 "cellW": 60,
                 "cellH": 64
             });
+            board.makeRegions();
         },
         makeKomaDai: function() {
-            var game = this;
-            game.komaDai = {};
-            game.komaDai["+"] = Crafty.e(
+            var shogi = this;
+            shogi.komaDai = {};
+            shogi.komaDai["+"] = Crafty.e(
                 "2D, Dom, SpriteKomadai, Region, Collision, Stack"
             );
-            game.komaDai["+"].attr({x:820, y:240, z:51, name:"+"});
-            game.komaDai["+"].game = game;
-            game.komaDai["-"] = Crafty.e(
+            shogi.komaDai["+"].attr({x:820, y:240, z:51, name:"+"});
+            shogi.komaDai["+"].shogi = shogi;
+            shogi.komaDai["-"] = Crafty.e(
                 "2D, Dom, SpriteKomadai, Region, Collision, Stack"
             );
-            game.komaDai["-"].attr({x:20, y:20, z:51, name:"-"});
-            game.komaDai["-"].game = game;
+            shogi.komaDai["-"].attr({x:20, y:20, z:51, name:"-"});
+            shogi.komaDai["-"].shogi = shogi;
         },
-        layout: function() {
-            this.board.layout();
+        makeKomaBukuro : function() {
+            var shogi = this;
+            shogi.komaBukuro= {};
         },
         initialSetup: function() {
             this.board.initialSetup();
@@ -648,10 +651,10 @@
                 evt.region.locString() +
                 evt.piece.pieceName;
         },
-        startListen: function(game){
+        startListen: function(shogi){
             var self = this;
-            this.game = game;
-            game.subscribe(self.handle);
+            this.shogi = shogi;
+            shogi.subscribe(self.handle);
         },
         handle: function(cmd) {
             console.log("Recorder:", cmd);

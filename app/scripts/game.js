@@ -79,9 +79,8 @@ var TestBed = {
 
 
 
-            var game = Crafty.e("Shogi");
-            game.layout();
-            game.initialSetup()
+            var shogi = Crafty.e("Shogi");
+            shogi.initialSetup()
 
             var recorder = Crafty.e("2D, DOM, Text, Recorder");
             recorder.attr({
@@ -92,7 +91,7 @@ var TestBed = {
                 "background_color": "white"
             });
             recorder.text("test! test! test!");
-            recorder.startListen(game);
+            recorder.startListen(shogi);
         });
         Crafty.scene("loading");
     },
