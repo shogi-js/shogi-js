@@ -677,32 +677,4 @@
         },
     }); //Crafty.c Shogi
 
-
-    Crafty.c("Recorder", {
-        init: function () {
-            this.requires("2D, DOM, Text");
-            this.moveList = [];
-            var did = this.getDomId();
-            $("#"+did).append("<textarea id='csa'></textarea>");
-            this.record = $("#csa");
-        },
-        lastEvt: null,
-        moveList: null,
-        formatAsCSA: function(evt) {
-            return "" + evt.piece.pieceColor +
-                this.lastEvt.region.locString() +
-                evt.region.locString() +
-                evt.piece.pieceName;
-        },
-        startListen: function(shogi){
-            var self = this;
-            this.shogi = shogi;
-            shogi.subscribe(self.handle);
-        },
-        handle: function(cmd) {
-            console.log("Recorder:", cmd);
-            //this.record.append(moveText + "\n");
-        }
-    }); //Crafty.c Recorder
-
 })(); //shogi.js

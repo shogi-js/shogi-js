@@ -82,16 +82,6 @@ var TestBed = {
             var shogi = Crafty.e("Shogi");
             shogi.initialSetup()
 
-            var recorder = Crafty.e("2D, DOM, Text, Recorder");
-            recorder.attr({
-                x:0,
-                y:700,
-                w:800,
-                h:200,
-                "background_color": "white"
-            });
-            recorder.text("test! test! test!");
-            recorder.startListen(shogi);
             shogi.handleCommand({
                 fromPiece:"FU",
                 toPiece:"FU",
