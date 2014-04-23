@@ -62,7 +62,7 @@ module.exports = function (grunt) {
                 },
                 files: [
                     '.tmp/scripts/*.js',
-                    '<%= yeoman.app %>/*.html',
+                    '<%= yeoman.app %>/{,*/}*.html',
                     '{.tmp,<%= yeoman.app %>}/styles/{,*/}*.css',
                     '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}'
                 ]
@@ -221,7 +221,14 @@ module.exports = function (grunt) {
         htmlmin: {
             dist: {
                 options: {
-
+                    collapseBooleanAttributes: true,
+                    collapseWhitespace: true,
+                    removeAttributeQuotes: true,
+                    removeCommentsFromCDATA: true,
+                    removeEmptyAttributes: true,
+                    removeOptionalTags: true,
+                    removeRedundantAttributes: true,
+                    useShortDoctype: true
                 },
                 files: [{
                     expand: true,
@@ -248,10 +255,25 @@ module.exports = function (grunt) {
                         'bower_components/**'
                     ]
                 }]
+            },
+            styles: {
+                expand: true,
+                dot: true,
+                cwd: '<%= config.app %>/styles',
+                dest: '.tmp/styles/',
+                src: '{,*/}*.css'
             }
         },
+        // Run some tasks in parallel to speed up build process
         concurrent: {
+            server: [
+                'copy:styles'
+            ],
+            test: [
+                'copy:styles'
+            ],
             dist: [
+                'copy:styles',
                 'imagemin',
                 'svgmin',
                 'htmlmin'
