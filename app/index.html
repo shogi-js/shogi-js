@@ -27,18 +27,17 @@
         <!-- <script src="libs/CraftyDebug/panels/assets.js"></script> -->
         <!-- <script src="libs/CraftyDebug/panels/entities.js"></script> -->
         <!-- endbuild -->
-
+        <script>
+            var TestBed = {};
+            /* need  global object. How to tell this Uglify 
+             * with in combined-script?? */
+        </script>
         <!-- build:js(.tmp) scripts/combined-scripts.js -->
         <script src="scripts/combined-scripts.js"></script>
         <!-- endbuild -->
         <script>
-            function RecordCtrl($scope) {
-                $scope.moveList = [
-                    {text: "7三不成"}
-                ];
-            };
+            TestBed.start();
         </script>
-
         <div>
             <label> name:</label>
             <input 
@@ -49,7 +48,7 @@
             <span> Hello! {{yourName}} </span>
         </div>
         <div><hr></div>
-        <div ng-controller="RecordCtrl">
+        <div ng-controller="TestBed.RecordCtrl">
             <ol>
                 <li ng-repeat="move in moveList">
                     <p ng-bind="move.text">
