@@ -667,7 +667,7 @@
                 evt.piece = src.peekPieceByName(cmd.fromPiece);
             } else if(cmd.fromKomadai) {
                 src = this.komaDai[cmd.side];
-                evt.piece = d.peekPieceByName(cmd.fromPiece);
+                evt.piece = src.peekPieceByName(cmd.fromPiece);
             } else {
                 src = this.board.squares[cmd.fromX][cmd.fromY];
                 evt.piece = src.piece;
