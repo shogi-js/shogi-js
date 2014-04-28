@@ -1,6 +1,12 @@
-var shogi = {};
-TestBed.start = function () {
+var ngShogi = angular.module("ngShogi", []);
+
+console.log("init game.js");
+
+ngShogi.directive('myShogi', [function() {
     "use strict";
+    var shogi = {} ;
+
+    console.log("shogi as ng-directive from game.js");
 
     Crafty.init(200 + 600 + 200, 1000);
     Crafty.canvas.init();
@@ -81,6 +87,9 @@ TestBed.start = function () {
 
         shogi = Crafty.e("Shogi");
         shogi.initialSetup()
+        
+        console.log("making module gameShogi");
+
 
         shogi.handleCommand({
             fromPiece:"FU",
@@ -118,12 +127,13 @@ TestBed.start = function () {
         });
     });
     Crafty.scene("loading");
-};
+    return shogi;
+}]);
 
-TestBed.RecordCtrl = function ($scope) {
+ngShogi.controller('RecordCtrl', function ($scope, shogi) {
     "use strict";
     $scope.moveList = [
-        {text: "7三不成"}
+        {text: "7三歩成"}
     ];
-};
+});
 
