@@ -37,7 +37,7 @@
     Crafty.c("Stack", {
         init: function () {
             this.requires("Region")
-            .bind("Departure", this.onDepature)
+            .bind("Departure", this.onDeparture)
             .bind("Arrival", this.onArrival);
             if (Crafty.support.setter) {
                 this._defineGetterSetterXsetter();
@@ -103,11 +103,15 @@
         peekPieceByName: function(pieceName) {
             return this.pieceStack[pieceName];
         },
-        onDepature: function(evt) {
+        onDeparture: function(evt) {
             "Departure";
             this._pop(evt.piece);
             this._layoutPiece();
-            this.shogi.trigger("Departure", {region:this, piece: evt.piece});
+            this.shogi.trigger("Departure", {
+                region:this,
+                piece: evt.piece,
+                wasPieceName: evt.piece.pieceName
+            });
         },
         onArrival: function(evt) {
             "Arrival";
@@ -123,20 +127,24 @@
     Crafty.c("Mutex", {
         init: function () {
             this.requires("Region")
-            .bind("Departure", this.onDepature)
+            .bind("Departure", this.onDeparture)
             .bind("Arrival", this.onArrival);
             this.piece = null;
         },
         isKomaDai: function() {
             return false;
         },
-        onDepature: function(evt) {
+        onDeparture: function(evt) {
             "Departure";
             if (this.piece !== evt.piece){
                 console.log("!! bad piece on", this);
             }
             this.piece = null;
-            this.shogi.trigger("Departure", {region:this, piece: evt.piece});
+            this.shogi.trigger("Departure", {
+                region:this,
+                piece: evt.piece,
+                wasPieceName: evt.piece.pieceName
+            });
         },
         _place: function(p) {
             this.piece = p;
@@ -558,7 +566,7 @@
         init: function () {
             this.requires("obj")
             .bind("Arrival", this.onArrival)
-            .bind("Departure", this.onDepature);
+            .bind("Departure", this.onDeparture);
             this.listeners = [];
             this.receivedEvents = [];
             this.makeBoard();
@@ -608,11 +616,13 @@
         getLastEvent: function() {
             return this.receivedEvents.pop();
         },
-        onDepature: function(evt) {
+        onDeparture: function(evt) {
+            console.log("Shogi: onDeparture", evt);
             this.receivedEvents.push(evt);
         },
         onArrival: function(evt) {
             var lastEvt = this.getLastEvent();
+            console.log("Shogi: onArrival:", lastEvt, evt);
             var cmd = this.makeCommand(lastEvt, evt);
             this.notify(cmd);
         },

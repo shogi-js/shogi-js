@@ -106,7 +106,7 @@ TestBed.start = function () {
         });
         shogi.handleCommand({
             fromPiece:"FU",
-            toPiece:"FU",
+            toPiece:"To",
             toKomadai: false,
             fromKomadai: false,
             promoted: true,
