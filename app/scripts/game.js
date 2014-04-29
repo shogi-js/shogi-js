@@ -10,8 +10,8 @@ ngShogi.directive("myShogi", function() {
             var shogi = {} ;
 
             console.log("shogi as ng-directive from game.js");
-            console.log(scope, element, attr, ctrl);
-            Crafty.init(200 + 600 + 200, 1000, angular.element(element));
+            console.log(scope, element, attr, ctrl, angular.element(element));
+            Crafty.init(200 + 600 + 200, 1000, element.get(0));
             Crafty.canvas.init();
 
             Crafty.scene("loading", function() {
